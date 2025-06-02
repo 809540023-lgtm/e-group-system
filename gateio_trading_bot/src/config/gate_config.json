@@ -1,0 +1,8 @@
+{
+    "target_url": "https://www.gate.io/zh-tw/futures/USDT/BTC_USDT",
+    "wait_timeout": 10,
+    "page_load_delay": 3,
+    "tab_switch_delay": 2,
+    "output_file": "../gate_grid_all_tabs.xlsx",
+    "headless": false
+}

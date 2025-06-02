@@ -1,0 +1,621 @@
+2025-06-02 00:21:10,259 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 00:21:17,865 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 00:21:26,756 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 00:22:09,424 - INFO - 成功點擊合約網格按鈕
+2025-06-02 00:22:12,439 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 00:22:22,505 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001013d03e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001013c86a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100f05fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100f4d1bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100f8e044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100f413f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000101394804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000101397ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000101375dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010139834c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000101367664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001013b82b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001013b843c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001013c82f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:22:22,512 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 00:22:32,700 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001013d03e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001013c86a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100f05fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100f4d1bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100f8e044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100f413f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000101394804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000101397ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000101375dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010139834c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000101367664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001013b82b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001013b843c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001013c82f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:22:32,701 - INFO - 正在收集 網格明細 數據...
+2025-06-02 00:22:42,711 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001013d03e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001013c86a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100f05fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100f4d1bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100f8e044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100f413f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000101394804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000101397ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000101375dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010139834c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000101367664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001013b82b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001013b843c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001013c82f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:22:42,712 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 00:22:53,117 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001013d03e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001013c86a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100f05fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100f4d1bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100f8e044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100f413f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000101394804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000101397ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000101375dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010139834c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000101367664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001013b82b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001013b843c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001013c82f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:22:53,572 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 00:22:53,572 - INFO - 數據收集完成！
+2025-06-02 00:22:53,870 - INFO - 瀏覽器已關閉
+2025-06-02 00:27:26,922 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 00:27:29,336 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 00:27:34,277 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 00:28:15,896 - INFO - 成功點擊合約網格按鈕
+2025-06-02 00:28:18,904 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 00:28:29,079 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x0000000102b5c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x0000000102b546a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102691fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001026d91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010271a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001026cd3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000102b20804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000102b23ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000102b01dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x0000000102b2434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000102af3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x0000000102b442b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x0000000102b4443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x0000000102b542f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:28:29,081 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 00:28:39,256 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x0000000102b5c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x0000000102b546a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102691fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001026d91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010271a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001026cd3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000102b20804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000102b23ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000102b01dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x0000000102b2434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000102af3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x0000000102b442b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x0000000102b4443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x0000000102b542f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:28:39,257 - INFO - 正在收集 網格明細 數據...
+2025-06-02 00:28:49,340 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x0000000102b5c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x0000000102b546a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102691fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001026d91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010271a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001026cd3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000102b20804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000102b23ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000102b01dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x0000000102b2434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000102af3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x0000000102b442b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x0000000102b4443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x0000000102b542f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:28:49,344 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 00:28:59,404 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x0000000102b5c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x0000000102b546a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102691fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001026d91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010271a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001026cd3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000102b20804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000102b23ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000102b01dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x0000000102b2434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000102af3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x0000000102b442b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x0000000102b4443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x0000000102b542f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:29:00,398 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 00:29:00,400 - INFO - 數據收集完成！
+2025-06-02 00:29:00,758 - INFO - 瀏覽器已關閉
+2025-06-02 00:40:02,406 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 00:40:05,600 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 00:40:14,972 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 00:40:56,655 - INFO - 成功點擊合約網格按鈕
+2025-06-02 00:40:59,664 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 00:41:09,979 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x000000010453c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001045346a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104071fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001040b91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001040fa044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001040ad3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000104500804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000104503ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001044e1dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010450434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x00000001044d3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001045242b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010452443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001045342f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:41:09,981 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 00:41:20,383 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x000000010453c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001045346a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104071fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001040b91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001040fa044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001040ad3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000104500804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000104503ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001044e1dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010450434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x00000001044d3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001045242b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010452443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001045342f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:41:20,385 - INFO - 正在收集 網格明細 數據...
+2025-06-02 00:41:30,859 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x000000010453c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001045346a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104071fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001040b91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001040fa044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001040ad3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000104500804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000104503ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001044e1dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010450434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x00000001044d3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001045242b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010452443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001045342f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:41:30,860 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 00:41:41,097 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x000000010453c3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001045346a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104071fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001040b91bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001040fa044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001040ad3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000104500804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000104503ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001044e1dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010450434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x00000001044d3664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001045242b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010452443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001045342f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:41:42,068 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 00:41:42,068 - INFO - 數據收集完成！
+2025-06-02 00:41:42,448 - INFO - 瀏覽器已關閉
+2025-06-02 00:48:54,087 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 00:48:59,945 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 00:49:13,288 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 00:49:55,618 - INFO - 成功點擊合約網格按鈕
+2025-06-02 00:49:58,674 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 00:50:08,921 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001011083e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001011006a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100c3dfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100c851bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100cc6044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100c793f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001010cc804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001010cfad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001010addd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001010d034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010109f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001010f02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001010f043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001011002f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:50:08,922 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 00:50:19,165 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001011083e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001011006a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100c3dfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100c851bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100cc6044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100c793f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001010cc804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001010cfad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001010addd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001010d034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010109f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001010f02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001010f043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001011002f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:50:19,167 - INFO - 正在收集 網格明細 數據...
+2025-06-02 00:50:29,411 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001011083e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001011006a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100c3dfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100c851bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100cc6044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100c793f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001010cc804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001010cfad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001010addd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001010d034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010109f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001010f02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001010f043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001011002f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:50:29,412 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 00:50:39,629 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001011083e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001011006a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000100c3dfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000100c851bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000100cc6044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000100c793f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001010cc804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001010cfad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001010addd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001010d034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010109f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001010f02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001010f043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001011002f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 00:50:40,005 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 00:50:40,005 - INFO - 數據收集完成！
+2025-06-02 00:50:40,426 - INFO - 瀏覽器已關閉
+2025-06-02 01:08:18,173 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 01:08:25,746 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 01:08:35,661 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 01:09:24,120 - INFO - 成功點擊合約網格按鈕
+2025-06-02 01:09:27,124 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 01:09:37,191 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001005ac3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001005a46a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x00000001000e1fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001001291bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010016a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x000000010011d3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000100570804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000100573ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000100551dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010057434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000100543664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001005942b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010059443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001005a42f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:09:37,193 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 01:09:47,547 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001005ac3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001005a46a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x00000001000e1fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001001291bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010016a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x000000010011d3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000100570804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000100573ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000100551dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010057434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000100543664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001005942b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010059443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001005a42f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:09:47,548 - INFO - 正在收集 網格明細 數據...
+2025-06-02 01:09:58,008 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001005ac3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001005a46a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x00000001000e1fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001001291bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010016a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x000000010011d3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000100570804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000100573ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000100551dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010057434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000100543664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001005942b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010059443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001005a42f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:09:58,008 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 01:10:08,402 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001005ac3e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001005a46a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x00000001000e1fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001001291bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x000000010016a044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x000000010011d3f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x0000000100570804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x0000000100573ad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x0000000100551dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010057434c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x0000000100543664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001005942b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x000000010059443c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001005a42f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:10:08,796 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 01:10:08,796 - INFO - 數據收集完成！
+2025-06-02 01:10:09,179 - INFO - 瀏覽器已關閉
+2025-06-02 01:25:02,672 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 01:25:05,123 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 01:25:14,250 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 01:26:05,754 - WARNING - 未找到合約網格按鈕，嘗試手動導航
+2025-06-02 01:26:05,755 - ERROR - 無法導航到合約網格頁面
+2025-06-02 01:26:06,150 - INFO - 瀏覽器已關閉
+2025-06-02 01:29:25,971 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 01:29:28,209 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 01:29:38,072 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 01:30:00,307 - INFO - 成功點擊合約網格按鈕
+2025-06-02 01:30:03,311 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 01:30:13,511 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001052b83e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001052b06a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104dedfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000104e351bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000104e76044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000104e293f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x000000010527c804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x000000010527fad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x000000010525ddd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010528034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010524f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001052a02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001052a043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001052b02f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:30:13,518 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 01:30:23,922 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001052b83e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001052b06a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104dedfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000104e351bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000104e76044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000104e293f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x000000010527c804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x000000010527fad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x000000010525ddd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010528034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010524f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001052a02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001052a043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001052b02f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:30:23,934 - INFO - 正在收集 網格明細 數據...
+2025-06-02 01:30:34,019 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001052b83e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001052b06a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104dedfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000104e351bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000104e76044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000104e293f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x000000010527c804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x000000010527fad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x000000010525ddd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010528034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010524f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001052a02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001052a043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001052b02f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:30:34,024 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 01:30:44,282 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001052b83e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001052b06a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000104dedfbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x0000000104e351bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x0000000104e76044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x0000000104e293f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x000000010527c804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x000000010527fad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x000000010525ddd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x000000010528034c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010524f664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001052a02b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001052a043c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001052b02f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:30:45,086 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 01:30:45,086 - INFO - 數據收集完成！
+2025-06-02 01:30:45,464 - INFO - 瀏覽器已關閉
+2025-06-02 01:42:32,267 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 01:42:34,000 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 01:42:42,946 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 01:43:34,208 - WARNING - 未找到合約網格按鈕，嘗試手動導航
+2025-06-02 01:43:34,215 - ERROR - 無法導航到合約網格頁面
+2025-06-02 01:43:34,375 - INFO - 瀏覽器已關閉
+2025-06-02 01:47:43,722 - INFO - 開始 Gate.io 合約網格數據收集...
+2025-06-02 01:47:46,179 - INFO - 正在訪問 Gate.io 期貨頁面...
+2025-06-02 01:47:56,159 - INFO - 正在尋找合約網格按鈕...
+2025-06-02 01:48:37,302 - INFO - 成功點擊合約網格按鈕
+2025-06-02 01:48:40,311 - INFO - 正在收集 交易記錄 數據...
+2025-06-02 01:48:50,697 - ERROR - 收集 交易記錄 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001026043e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001025fc6a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102139fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001021811bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001021c2044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001021753f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001025c8804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001025cbad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001025a9dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001025cc34c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010259b664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001025ec2b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001025ec43c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001025fc2f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:48:50,699 - INFO - 正在收集 當前持倉 數據...
+2025-06-02 01:49:01,182 - ERROR - 收集 當前持倉 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001026043e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001025fc6a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102139fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001021811bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001021c2044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001021753f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001025c8804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001025cbad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001025a9dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001025cc34c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010259b664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001025ec2b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001025ec43c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001025fc2f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:49:01,185 - INFO - 正在收集 網格明細 數據...
+2025-06-02 01:49:11,358 - ERROR - 收集 網格明細 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001026043e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001025fc6a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102139fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001021811bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001021c2044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001021753f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001025c8804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001025cbad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001025a9dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001025cc34c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010259b664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001025ec2b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001025ec43c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001025fc2f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:49:11,363 - INFO - 正在收集 訂單歷史 數據...
+2025-06-02 01:49:21,664 - ERROR - 收集 訂單歷史 數據時發生錯誤: Message: 
+Stacktrace:
+0   chromedriver                        0x00000001026043e0 cxxbridge1$str$ptr + 2829900
+1   chromedriver                        0x00000001025fc6a8 cxxbridge1$str$ptr + 2797844
+2   chromedriver                        0x0000000102139fbc cxxbridge1$string$len + 90140
+3   chromedriver                        0x00000001021811bc cxxbridge1$string$len + 381468
+4   chromedriver                        0x00000001021c2044 cxxbridge1$string$len + 647332
+5   chromedriver                        0x00000001021753f8 cxxbridge1$string$len + 332888
+6   chromedriver                        0x00000001025c8804 cxxbridge1$str$ptr + 2585200
+7   chromedriver                        0x00000001025cbad4 cxxbridge1$str$ptr + 2598208
+8   chromedriver                        0x00000001025a9dd8 cxxbridge1$str$ptr + 2459716
+9   chromedriver                        0x00000001025cc34c cxxbridge1$str$ptr + 2600376
+10  chromedriver                        0x000000010259b664 cxxbridge1$str$ptr + 2400464
+11  chromedriver                        0x00000001025ec2b0 cxxbridge1$str$ptr + 2731292
+12  chromedriver                        0x00000001025ec43c cxxbridge1$str$ptr + 2731688
+13  chromedriver                        0x00000001025fc2f4 cxxbridge1$str$ptr + 2796896
+14  libsystem_pthread.dylib             0x000000018cf66f94 _pthread_start + 136
+15  libsystem_pthread.dylib             0x000000018cf61d34 thread_start + 8
+
+2025-06-02 01:49:22,289 - INFO - 所有數據已保存到 gate_grid_all_tabs.xlsx
+2025-06-02 01:49:22,289 - INFO - 數據收集完成！
+2025-06-02 01:49:22,838 - INFO - 瀏覽器已關閉

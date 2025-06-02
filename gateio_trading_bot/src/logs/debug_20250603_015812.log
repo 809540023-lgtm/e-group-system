@@ -1,0 +1,28 @@
+2025-06-03 01:58:12,281 - INFO - 開始 Gate.io 合約網格數據收集 (Debug 模式)...
+2025-06-03 01:58:12,283 - DEBUG - Selenium Manager binary found at: /Users/linemily/gateio-env/lib/python3.13/site-packages/selenium/webdriver/common/macos/selenium-manager
+2025-06-03 01:58:12,283 - DEBUG - Executing process: /Users/linemily/gateio-env/lib/python3.13/site-packages/selenium/webdriver/common/macos/selenium-manager --browser chrome --debug --language-binding python --output json
+2025-06-03 01:58:13,560 - DEBUG - chromedriver not found in PATH
+2025-06-03 01:58:13,561 - DEBUG - chrome detected at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+2025-06-03 01:58:13,561 - DEBUG - Running command: /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version
+2025-06-03 01:58:13,561 - DEBUG - Output: "Google Chrome 136.0.7103.114 "
+2025-06-03 01:58:13,561 - DEBUG - Detected browser: chrome 136.0.7103.114
+2025-06-03 01:58:13,561 - DEBUG - Required driver: chromedriver 136.0.7103.113
+2025-06-03 01:58:13,561 - DEBUG - chromedriver 136.0.7103.113 already in the cache
+2025-06-03 01:58:13,561 - DEBUG - Driver path: /Users/linemily/.cache/selenium/chromedriver/mac-arm64/136.0.7103.113/chromedriver
+2025-06-03 01:58:13,561 - DEBUG - Browser path: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+2025-06-03 01:58:13,566 - DEBUG - Started executable: `/Users/linemily/.cache/selenium/chromedriver/mac-arm64/136.0.7103.113/chromedriver` in a child process with pid: 56962 using 0 to output -3
+2025-06-03 01:58:13,814 - DEBUG - POST http://localhost:53302/session {'capabilities': {'firstMatch': [{}], 'alwaysMatch': {'browserName': 'chrome', 'pageLoadStrategy': <PageLoadStrategy.normal: 'normal'>, 'browserVersion': None, 'goog:chromeOptions': {'excludeSwitches': ['enable-automation'], 'useAutomationExtension': False, 'extensions': [], 'binary': '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', 'args': ['--no-sandbox', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled']}}}}
+2025-06-03 01:58:13,818 - DEBUG - Starting new HTTP connection (1): localhost:53302
+2025-06-03 01:58:17,281 - DEBUG - http://localhost:53302 "POST /session HTTP/1.1" 200 0
+2025-06-03 01:58:17,286 - DEBUG - Remote response: status=200 | data={"value":{"capabilities":{"acceptInsecureCerts":false,"browserName":"chrome","browserVersion":"136.0.7103.114","chrome":{"chromedriverVersion":"136.0.7103.113 (76fa3c1782406c63308c70b54f228fd39c7aaa71-refs/branch-heads/7103_108@{#3})","userDataDir":"/var/folders/y3/724ghhxn753gn3xy4z6mjl280000gn/T/.org.chromium.Chromium.MvJvnb"},"fedcm:accounts":true,"goog:chromeOptions":{"debuggerAddress":"localhost:53316"},"networkConnectionEnabled":false,"pageLoadStrategy":"normal","platformName":"mac","proxy":{},"setWindowRect":true,"strictFileInteractability":false,"timeouts":{"implicit":0,"pageLoad":300000,"script":30000},"unhandledPromptBehavior":"dismiss and notify","webauthn:extension:credBlob":true,"webauthn:extension:largeBlob":true,"webauthn:extension:minPinLength":true,"webauthn:extension:prf":true,"webauthn:virtualAuthenticators":true},"sessionId":"ff6249a5b448309f3909f9d4b5a09641"}} | headers=HTTPHeaderDict({'Content-Length': '893', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-06-03 01:58:17,293 - DEBUG - Finished Request
+2025-06-03 01:58:17,300 - DEBUG - POST http://localhost:53302/session/ff6249a5b448309f3909f9d4b5a09641/execute/sync {'script': "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})", 'args': []}
+2025-06-03 01:58:17,396 - DEBUG - http://localhost:53302 "POST /session/ff6249a5b448309f3909f9d4b5a09641/execute/sync HTTP/1.1" 200 0
+2025-06-03 01:58:17,396 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-06-03 01:58:17,396 - DEBUG - Finished Request
+2025-06-03 01:58:17,399 - INFO - 瀏覽器設置成功
+2025-06-03 01:58:17,399 - INFO - 正在導航到 Gate.io...
+2025-06-03 01:58:17,399 - DEBUG - POST http://localhost:53302/session/ff6249a5b448309f3909f9d4b5a09641/url {'url': 'https://www.gate.io'}
+2025-06-03 01:58:21,074 - DEBUG - http://localhost:53302 "POST /session/ff6249a5b448309f3909f9d4b5a09641/url HTTP/1.1" 200 0
+2025-06-03 01:58:21,074 - DEBUG - Remote response: status=200 | data={"value":null} | headers=HTTPHeaderDict({'Content-Length': '14', 'Content-Type': 'application/json; charset=utf-8', 'cache-control': 'no-cache'})
+2025-06-03 01:58:21,075 - DEBUG - Finished Request
