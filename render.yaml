@@ -1,0 +1,63 @@
+services:
+  # 後端 API 服務
+  - type: web
+    name: e-group-backend
+    env: node
+    plan: starter
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: SUPABASE_URL
+        scope: run
+        value: ${SUPABASE_URL}
+      - key: SUPABASE_SERVICE_KEY
+        scope: run
+        value: ${SUPABASE_SERVICE_KEY}
+      - key: JWT_SECRET
+        scope: run
+        value: ${JWT_SECRET}
+      - key: PORT
+        scope: run
+        value: 3001
+
+  # 前端 Web 應用
+  - type: web
+    name: e-group-frontend
+    env: node
+    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        scope: run
+        value: https://e-group-backend.onrender.com/api
+
+  # E 組定時任務
+  - type: cron
+    name: e-group-scheduler
+    plan: starter
+    buildCommand: cd e_group && pip install -r requirements.txt
+    startCommand: cd e_group && python src/main.py
+    schedule: "0 0 * * *"
+    envVars:
+      - key: GOOGLE_API_KEY
+        scope: run
+        value: ${GOOGLE_API_KEY}
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        scope: run
+        value: agai2_new
+      - key: SUPABASE_URL
+        scope: run
+        value: ${SUPABASE_URL}
+      - key: SUPABASE_SERVICE_KEY
+        scope: run
+        value: ${SUPABASE_SERVICE_KEY}
+      - key: OPENAI_API_KEY
+        scope: run
+        value: ${OPENAI_API_KEY}
+      - key: TELEGRAM_BOT_TOKEN
+        scope: run
+        value: ${TELEGRAM_BOT_TOKEN}
+      - key: TELEGRAM_CHAT_ID
+        scope: run
+        value: ${TELEGRAM_CHAT_ID}
