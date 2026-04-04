@@ -43,22 +43,22 @@ services:
     envVars:
       - key: GOOGLE_API_KEY
         scope: run
-        value: ${GOOGLE_API_KEY}
+        value: your-google-api-key
       - key: GOOGLE_DRIVE_FOLDER_ID
         scope: run
         value: agai2_new
       - key: SUPABASE_URL
         scope: run
-        value: ${SUPABASE_URL}
+        value: https://your-supabase-project.supabase.co
       - key: SUPABASE_SERVICE_KEY
         scope: run
-        value: ${SUPABASE_SERVICE_KEY}
+        value: your-supabase-service-key
       - key: OPENAI_API_KEY
         scope: run
-        value: ${OPENAI_API_KEY}
+        value: your-openai-api-key
       - key: TELEGRAM_BOT_TOKEN
         scope: run
-        value: ${TELEGRAM_BOT_TOKEN}
+        value: your-telegram-bot-token
       - key: TELEGRAM_CHAT_ID
         scope: run
-        value: ${TELEGRAM_CHAT_ID}
+        value: your-telegram-chat-id
