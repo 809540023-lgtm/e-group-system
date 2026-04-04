@@ -9,13 +9,10 @@ services:
     envVars:
       - key: SUPABASE_URL
         scope: run
-        value: ${SUPABASE_URL}
       - key: SUPABASE_SERVICE_KEY
         scope: run
-        value: ${SUPABASE_SERVICE_KEY}
       - key: JWT_SECRET
         scope: run
-        value: ${JWT_SECRET}
       - key: PORT
         scope: run
         value: 3001
