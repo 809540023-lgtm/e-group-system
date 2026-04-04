@@ -57,9 +57,19 @@ app.use((err, req, res, next) => {
   });
 });
 
+// 檢查必要的環境變數
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'JWT_SECRET'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  logger.warn(`⚠️  Missing environment variables: ${missingEnvVars.join(', ')}`);
+  logger.warn('The API will start in limited mode. Please configure these variables for full functionality.');
+}
+
 // 啟動服務器
 app.listen(PORT, () => {
   logger.info(`Server started on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
