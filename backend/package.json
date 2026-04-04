@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "E 組管理平台後端服務",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
