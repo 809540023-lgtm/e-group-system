@@ -9,10 +9,13 @@ services:
     envVars:
       - key: SUPABASE_URL
         scope: run
+        value: https://your-supabase-project.supabase.co
       - key: SUPABASE_SERVICE_KEY
         scope: run
+        value: your-supabase-service-key
       - key: JWT_SECRET
         scope: run
+        value: your-jwt-secret-key-change-this
       - key: PORT
         scope: run
         value: 3001
