@@ -1,0 +1,86 @@
+name: 自動部署到 Render
+
+on:
+  push:
+    branches: [ main, claude/inspiring-cerf ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 檢出代碼
+      uses: actions/checkout@v3
+
+    - name: 部署後端 API
+      run: |
+        curl -X POST https://api.render.com/v1/services \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "name": "hualiang-api",
+            "serviceDetails": {
+              "env": "python",
+              "buildCommand": "pip install -r requirements.txt",
+              "startCommand": "gunicorn -w 4 -b 0.0.0.0:$PORT app:create_app()"
+            },
+            "envVars": [
+              {
+                "key": "FLASK_ENV",
+                "value": "production"
+              },
+              {
+                "key": "FLASK_DEBUG",
+                "value": "False"
+              },
+              {
+                "key": "SECRET_KEY",
+                "value": "${{ secrets.FLASK_SECRET_KEY }}"
+              }
+            ]
+          }'
+
+    - name: 部署前端應用
+      run: |
+        curl -X POST https://api.render.com/v1/services \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "name": "hualiang-frontend",
+            "serviceDetails": {
+              "env": "static",
+              "buildCommand": "npm install && npm run build",
+              "publishDirectory": "dist"
+            },
+            "envVars": [
+              {
+                "key": "VITE_API_URL",
+                "value": "${{ secrets.RENDER_API_URL }}"
+              }
+            ]
+          }'
+
+    - name: 部署管理後台
+      run: |
+        curl -X POST https://api.render.com/v1/services \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "name": "hualiang-admin",
+            "serviceDetails": {
+              "env": "static",
+              "buildCommand": "npm install && npm run build",
+              "publishDirectory": "dist"
+            },
+            "envVars": [
+              {
+                "key": "VITE_API_URL",
+                "value": "${{ secrets.RENDER_API_URL }}"
+              }
+            ]
+          }'
+
+    - name: 部署完成通知
+      if: success()
+      run: echo "✅ 所有服務已成功部署到 Render！"
