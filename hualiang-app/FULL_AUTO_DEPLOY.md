@@ -17,16 +17,29 @@ https://dashboard.render.com/account?accountId=YOUR_OWNER_ID
 uXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-### 步驟 2️⃣ - 運行部署腳本 (30 秒)
+### 步驟 2️⃣ - 設置環境變量 (30 秒)
+
+建立 .env 文件：
+```bash
+cd hualiang-app
+cp .env.example .env
+```
+
+編輯 .env 文件，添加你的 API 密鑰和 Owner ID：
+```
+RENDER_API_TOKEN=your_render_api_token_here
+RENDER_OWNER_ID=your_owner_id_here
+```
+
+### 步驟 3️⃣ - 運行部署腳本 (30 秒)
 
 ```bash
-cd hauliang-app
 python3 auto_deploy.py
 ```
 
-當提示輸入 Owner ID 時，粘貼上面複製的 ID
+如果沒有在 .env 中設置 Owner ID，腳本會提示你輸入
 
-### 步驟 3️⃣ - 等待部署完成 (5-10 分鐘)
+### 步驟 4️⃣ - 等待部署完成 (5-10 分鐘)
 
 腳本會：
 - ✅ 自動部署後端 API
@@ -83,9 +96,11 @@ python3 auto_deploy.py
 
 方式 B：使用 API
 ```bash
-curl -H "Authorization: Bearer rnd_gq4BtbXa54L83rVow891A3ilQ3XA" \
+curl -H "Authorization: Bearer YOUR_RENDER_API_TOKEN" \
   https://api.render.com/v1/owners
 ```
+
+將 `YOUR_RENDER_API_TOKEN` 替換為你的實際 API 密鑰（存儲在 .env 文件中）
 
 ### 腳本失敗？
 
@@ -149,9 +164,10 @@ git push origin main
 
 **準備好了嗎？**
 
-運行：
+1. 設置 .env 文件（見上面的步驟 2）
+2. 運行：
 ```bash
 python3 auto_deploy.py
 ```
 
-然後輸入你的 Owner ID！ 🚀
+然後腳本會使用你的配置進行部署！ 🚀

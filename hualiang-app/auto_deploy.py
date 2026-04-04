@@ -7,9 +7,11 @@
 """
 
 import json
+import os
 import requests
 import sys
 from typing import Dict, Optional
+from dotenv import load_dotenv
 
 # 顏色定義
 GREEN = '\033[92m'
@@ -198,19 +200,30 @@ class RenderDeployer:
 
 
 def main():
+    # 載入 .env 文件
+    load_dotenv()
+
     print(f"\n{BLUE}華亮分會 App - 自動部署助手{RESET}\n")
 
-    # 讀取配置
-    api_token = "rnd_gq4BtbXa54L83rVow891A3ilQ3XA"
+    # 從環境變量讀取配置
+    api_token = os.getenv("RENDER_API_TOKEN")
+    owner_id = os.getenv("RENDER_OWNER_ID")
 
-    print("請提供你的 Render Owner ID")
-    print("(查看 https://dashboard.render.com/account 中的 URL)\n")
-
-    owner_id = input(f"{YELLOW}輸入 Owner ID: {RESET}").strip()
+    if not api_token:
+        print(f"{RED}✗ 錯誤: RENDER_API_TOKEN 未設置{RESET}")
+        print("請建立 .env 文件:")
+        print("  cp .env.example .env")
+        print("然後編輯 .env 添加你的 API 密鑰")
+        sys.exit(1)
 
     if not owner_id:
-        print(f"{RED}Owner ID 不能為空{RESET}")
-        sys.exit(1)
+        print("請提供你的 Render Owner ID")
+        print("(查看 https://dashboard.render.com/account 中的 URL)\n")
+        owner_id = input(f"{YELLOW}輸入 Owner ID: {RESET}").strip()
+
+        if not owner_id:
+            print(f"{RED}Owner ID 不能為空{RESET}")
+            sys.exit(1)
 
     # 開始部署
     deployer = RenderDeployer(api_token, owner_id)
