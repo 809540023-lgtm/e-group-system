@@ -4,9 +4,8 @@ services:
     name: e-group-backend
     env: node
     plan: starter
-    buildCommand: cd backend && npm install --legacy-peer-deps
+    buildCommand: cd backend && npm cache clean --force && npm install --legacy-peer-deps --no-audit
     startCommand: cd backend && npm start
-    preBuildCommand: echo "Building backend service..."
     envVars:
       - key: SUPABASE_URL
         scope: run
