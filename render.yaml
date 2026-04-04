@@ -35,6 +35,7 @@ services:
   # E 組定時任務
   - type: cron
     name: e-group-scheduler
+    runtime: python
     plan: starter
     buildCommand: cd e_group && pip install -r requirements.txt
     startCommand: cd e_group && python src/main.py
