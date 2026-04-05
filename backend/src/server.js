@@ -67,9 +67,10 @@ if (missingEnvVars.length > 0) {
 }
 
 // 啟動服務器
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   logger.info(`Server started on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Listening on 0.0.0.0:${PORT}`);
 });
 
 module.exports = app;
