@@ -1,0 +1,23 @@
+{
+  "name": "@jp/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./migrate": "./src/migrate.ts",
+    "./smoke": "./src/smoke.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "migrate": "node --experimental-strip-types src/migrate.ts",
+    "smoke": "node --experimental-strip-types src/smoke.ts"
+  },
+  "dependencies": {
+    "@jp/domain": "*",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10"
+  }
+}

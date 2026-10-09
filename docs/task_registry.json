@@ -1,0 +1,391 @@
+{
+  "version": "1.0",
+  "project": "日本日貨代購系統",
+  "note": "task_key 與 docs/handoffs/<task_key>.md 必須一致；status 只可用 completed、integration_pending、blocked、failed。",
+  "status_values": [
+    "completed",
+    "integration_pending",
+    "blocked",
+    "failed"
+  ],
+  "tasks": [
+    {
+      "task_key": "01_foundation",
+      "title": "基礎專案與可執行架構",
+      "depends_on": [],
+      "reading_sections": [
+        "01",
+        "02",
+        "14",
+        "18"
+      ],
+      "allowed_paths": [
+        "apps/",
+        "packages/",
+        "package.json",
+        "package-lock.json",
+        ".github/",
+        "infra/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/01_foundation.md"
+    },
+    {
+      "task_key": "02_database",
+      "title": "資料庫交易與遷移",
+      "depends_on": [
+        "01_foundation"
+      ],
+      "reading_sections": [
+        "14",
+        "16",
+        "17",
+        "19"
+      ],
+      "allowed_paths": [
+        "packages/db/",
+        "packages/domain/",
+        "db/",
+        "test/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/02_database.md"
+    },
+    {
+      "task_key": "03_auth",
+      "title": "身分驗證與最小權限",
+      "depends_on": [
+        "02_database"
+      ],
+      "reading_sections": [
+        "10",
+        "17"
+      ],
+      "allowed_paths": [
+        "apps/web/",
+        "packages/domain/auth/",
+        "packages/db/",
+        "test/auth/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/03_auth.md"
+    },
+    {
+      "task_key": "04_google_sync",
+      "title": "Google 商品來源同步",
+      "depends_on": [
+        "02_database"
+      ],
+      "reading_sections": [
+        "03",
+        "14"
+      ],
+      "allowed_paths": [
+        "apps/worker/",
+        "apps/web/src/app/admin/",
+        "packages/integrations/google/",
+        "packages/domain/catalog/",
+        "packages/db/",
+        "test/sync/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/04_google_sync.md"
+    },
+    {
+      "task_key": "05_catalog_pricing",
+      "title": "商品上架與定價",
+      "depends_on": [
+        "04_google_sync"
+      ],
+      "reading_sections": [
+        "03",
+        "04",
+        "09"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/domain/catalog/",
+        "packages/domain/pricing/",
+        "packages/db/",
+        "test/catalog/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/05_catalog_pricing.md"
+    },
+    {
+      "task_key": "06_storefront",
+      "title": "前臺選單與長者操作",
+      "depends_on": [
+        "05_catalog_pricing"
+      ],
+      "reading_sections": [
+        "05",
+        "09"
+      ],
+      "allowed_paths": [
+        "apps/web/",
+        "packages/ui/",
+        "test/ui/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/06_storefront.md"
+    },
+    {
+      "task_key": "07_checkout",
+      "title": "購物車與訂單交易",
+      "depends_on": [
+        "06_storefront"
+      ],
+      "reading_sections": [
+        "06",
+        "14",
+        "15"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/api/",
+        "apps/web/src/app/checkout/",
+        "packages/domain/checkout/",
+        "packages/db/",
+        "test/checkout/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/07_checkout.md"
+    },
+    {
+      "task_key": "08_payments",
+      "title": "金流與電子發票",
+      "depends_on": [
+        "07_checkout"
+      ],
+      "reading_sections": [
+        "07",
+        "15",
+        "17"
+      ],
+      "allowed_paths": [
+        "packages/integrations/payment/",
+        "packages/integrations/invoice/",
+        "apps/web/src/app/api/webhooks/",
+        "apps/worker/",
+        "packages/db/",
+        "test/payments/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/08_payments.md"
+    },
+    {
+      "task_key": "09_procurement",
+      "title": "日本採購與入庫",
+      "depends_on": [
+        "08_payments"
+      ],
+      "reading_sections": [
+        "08",
+        "14"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/domain/procurement/",
+        "packages/db/",
+        "apps/worker/",
+        "test/procurement/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/09_procurement.md"
+    },
+    {
+      "task_key": "10_shipping",
+      "title": "配送與物流追蹤",
+      "depends_on": [
+        "09_procurement"
+      ],
+      "reading_sections": [
+        "08",
+        "15"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/integrations/shipping/",
+        "packages/domain/shipping/",
+        "packages/db/",
+        "apps/worker/",
+        "test/shipping/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/10_shipping.md"
+    },
+    {
+      "task_key": "11_line",
+      "title": "LINE 客服與員工通知",
+      "depends_on": [
+        "10_shipping"
+      ],
+      "reading_sections": [
+        "10",
+        "15",
+        "17"
+      ],
+      "allowed_paths": [
+        "packages/integrations/line/",
+        "apps/web/src/app/api/webhooks/",
+        "apps/worker/",
+        "apps/web/src/app/admin/",
+        "test/line/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/11_line.md"
+    },
+    {
+      "task_key": "12_marketing_content",
+      "title": "行銷內容中心",
+      "depends_on": [
+        "11_line"
+      ],
+      "reading_sections": [
+        "12",
+        "13"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/domain/marketing/",
+        "packages/db/",
+        "apps/worker/",
+        "test/marketing/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/12_marketing_content.md"
+    },
+    {
+      "task_key": "13_meta_ads",
+      "title": "Meta 廣告",
+      "depends_on": [
+        "12_marketing_content"
+      ],
+      "reading_sections": [
+        "12",
+        "13",
+        "21"
+      ],
+      "allowed_paths": [
+        "packages/integrations/meta/",
+        "apps/web/src/app/admin/",
+        "apps/worker/",
+        "packages/db/",
+        "test/meta/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/13_meta_ads.md"
+    },
+    {
+      "task_key": "14_chatgpt_ads",
+      "title": "ChatGPT Ads",
+      "depends_on": [
+        "12_marketing_content"
+      ],
+      "reading_sections": [
+        "12",
+        "13",
+        "21"
+      ],
+      "allowed_paths": [
+        "packages/integrations/openai-ads/",
+        "apps/web/src/app/admin/",
+        "apps/worker/",
+        "packages/db/",
+        "test/openai-ads/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/14_chatgpt_ads.md"
+    },
+    {
+      "task_key": "15_analytics",
+      "title": "追蹤事件與經營分析",
+      "depends_on": [
+        "13_meta_ads",
+        "14_chatgpt_ads"
+      ],
+      "reading_sections": [
+        "13",
+        "16"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/domain/analytics/",
+        "packages/db/",
+        "apps/worker/",
+        "test/analytics/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/15_analytics.md"
+    },
+    {
+      "task_key": "16_ai_orchestration",
+      "title": "AI 任務編排",
+      "depends_on": [
+        "17_staff_support"
+      ],
+      "reading_sections": [
+        "11",
+        "21"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "apps/worker/",
+        "packages/domain/ai/",
+        "packages/integrations/ai/",
+        "packages/db/",
+        "prompts/",
+        "test/ai/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/16_ai_orchestration.md"
+    },
+    {
+      "task_key": "17_staff_support",
+      "title": "員工管理與客服",
+      "depends_on": [
+        "11_line"
+      ],
+      "reading_sections": [
+        "10",
+        "16",
+        "23"
+      ],
+      "allowed_paths": [
+        "apps/web/src/app/admin/",
+        "packages/domain/staff/",
+        "packages/domain/support/",
+        "packages/db/",
+        "apps/worker/",
+        "test/staff-support/",
+        "docs/handoffs/"
+      ],
+      "handoff": "docs/handoffs/17_staff_support.md"
+    },
+    {
+      "task_key": "18_release_uat",
+      "title": "正式部署與驗收",
+      "depends_on": [
+        "15_analytics",
+        "16_ai_orchestration"
+      ],
+      "reading_sections": [
+        "18",
+        "19",
+        "20",
+        "22",
+        "24"
+      ],
+      "allowed_paths": [
+        "infra/",
+        ".github/",
+        "apps/",
+        "packages/",
+        "test/",
+        "docs/",
+        "README.md"
+      ],
+      "handoff": "docs/handoffs/18_release_uat.md"
+    }
+  ]
+}

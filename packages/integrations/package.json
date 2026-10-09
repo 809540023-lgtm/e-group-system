@@ -1,0 +1,23 @@
+{
+  "name": "@jp/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./google": "./src/google/index.ts",
+    "./payment": "./src/payment/index.ts",
+    "./invoice": "./src/invoice/index.ts",
+    "./line": "./src/line/index.ts",
+    "./meta": "./src/meta/index.ts",
+    "./openai-ads": "./src/openai-ads/index.ts",
+    "./shipping": "./src/shipping/index.ts",
+    "./ai": "./src/ai/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@jp/domain": "*"
+  }
+}

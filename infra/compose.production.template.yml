@@ -1,0 +1,70 @@
+# 正式環境範本（規劃書 18 章；模組 18）。
+#
+# 這是範本，不是可直接啟用的設定。啟用前必須：
+#   1. 以 secret store 或私密 env 提供所有憑證，不得寫入本檔或 Git。
+#   2. 把 image 換成從指定已測 commit 建置、以 digest 固定的映像。
+#   3. staging 與 production 使用各自資料庫與金鑰。
+#   4. 先完成備份、遷移、readiness 檢查，再切換流量。
+#   5. 程式回復與資料回復分開；不自動逆轉金融紀錄。
+#
+# 用法（僅供對照，請勿直接套用）：
+#   docker compose -f infra/compose.production.template.yml config
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?必須由 secret store 提供}
+      POSTGRES_USER: ${POSTGRES_USER:?必須由 secret store 提供}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?必須由 secret store 提供}
+      TZ: Asia/Taipei
+    volumes:
+      - jp-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  web:
+    # 以 digest 固定，不使用可變標籤。
+    image: ${WEB_IMAGE:?必須為固定 digest 的映像}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?必須由 secret store 提供}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?}
+      SESSION_SECRET: ${SESSION_SECRET:?}
+      QUOTE_SIGNING_SECRET: ${QUOTE_SIGNING_SECRET:?}
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  worker:
+    image: ${WORKER_IMAGE:?必須為固定 digest 的映像}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL_WORKER:?必須由 secret store 提供}
+      WORKER_ID: ${WORKER_ID:-worker-1}
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  jp-pgdata:
