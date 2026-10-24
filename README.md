@@ -115,9 +115,9 @@ apps/egroup/test            資料庫整合測試（交易保證）
 | 顧客 | `/products`、`/cart`、`/checkout`、`/orders`、`/account`、`/recalls`、`/trace/[batchId]` | 選購、取貨碼、點數、推薦碼、退款、批次溯源 |
 | 供應商 | `/supplier/*` | 商品、批次、檢驗文件、出貨、異常回覆 |
 | 加盟站點 | `/station/*` | 收貨、溫層、庫存、交付核銷、加熱、隔離、結算、訓練 |
-| 總部 | `/admin/*` | 採購、補貨、定價、站點評分、品質、推薦、對帳、稽核、人員、AI |
+| 總部 | `/admin/*` | 採購、補貨、定價、站點評分、品質、推薦、對帳、稽核、績效指標、人員、AI |
 | 資產 | `/assets`、`/assets/[assetNo]` | 設備、租約、保養與折舊 |
-| 公開 | `/stations`、`/recalls` | 站點清單、召回公告 |
+| 公開 | `/stations`、`/stations/map`、`/recalls` | 站點清單、站點地圖、召回公告 |
 
 ### 快速開始
 

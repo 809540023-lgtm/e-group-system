@@ -290,4 +290,29 @@ describe.skipIf(!available)('資料庫交易保證', () => {
 
     await expectSqlError(settle(), 'SETTLEMENT_DUPLICATE');
   });
+
+  it('準時備妥率有可稽核的資料來源', async () => {
+    const fixture = await createFixture(3);
+    const order = await createOrder(fixture, 1, `it-kpi-${fixture.suffix}`);
+
+    const promised = await db().query<{ promised_ready_at: string; lead: string }>(
+      `SELECT o.promised_ready_at,
+              (o.promised_ready_at - o.created_at)::text AS lead
+         FROM orders o WHERE o.id = $1`,
+      [order.order_id],
+    );
+    // 測試站點為 A 型，前置時間 4 小時。
+    expect(promised.rows[0]!.lead).toBe('04:00:00');
+
+    await payOrder(order.order_id, `it-kpi-pay-${fixture.suffix}`);
+    await markReady(order.order_id);
+
+    const ready = await db().query<{ ready_at: string | null }>(
+      `SELECT min(created_at)::text AS ready_at
+         FROM audit_events
+        WHERE action = 'order.ready' AND entity_id = $1`,
+      [order.order_id],
+    );
+    expect(ready.rows[0]!.ready_at).not.toBeNull();
+  });
 });

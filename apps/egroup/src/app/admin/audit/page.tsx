@@ -44,6 +44,9 @@ export default async function AdminAuditPage({
       </Card>
 
       <Card title="稽核事件" className="card">
+        <p className="muted small">
+          匯出為 CSV（含 BOM，Excel 可直接開啟）：<a className="btn btn-sm" href="/api/audit/export">下載稽核匯出</a>
+        </p>
         <Table head={['動作', '實體類型', '實體', '操作者', '原因', '時間']}>
           {events.map((event) => (
             <tr key={event.id}>

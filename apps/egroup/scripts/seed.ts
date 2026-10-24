@@ -375,7 +375,7 @@ try {
       [CUSTOMERS[0].id, STATIONS[0].id, JSON.stringify([{ sku: 'CHK-001', quantity: 2 }, { sku: 'GRN-001', quantity: 1 }]), hash, expires, 'seed-order-1'],
     );
     await client.query(`SELECT eg_pay_order($1,'demo_pay','TXN-SEED-1','seed-pay-1','seed')`, [order1.order_id]);
-    await client.query(`UPDATE orders SET status = 'ready' WHERE id = $1`, [order1.order_id]);
+    await client.query(`SELECT eg_mark_order_ready($1,'seed')`, [order1.order_id]);
     await client.query(`SELECT eg_deliver_order($1,'123456',$2,'seed')`, [order1.order_id, PICKUP_SECRET]);
 
     const order2 = await one<{ order_id: string }>(
@@ -383,7 +383,7 @@ try {
       [CUSTOMERS[1].id, STATIONS[1].id, JSON.stringify([{ sku: 'BEF-001', quantity: 1 }]), hash, expires, 'seed-order-2'],
     );
     await client.query(`SELECT eg_pay_order($1,'demo_pay','TXN-SEED-2','seed-pay-2','seed')`, [order2.order_id]);
-    await client.query(`UPDATE orders SET status = 'ready' WHERE id = $1`, [order2.order_id]);
+    await client.query(`SELECT eg_mark_order_ready($1,'seed')`, [order2.order_id]);
     await client.query(`SELECT eg_deliver_order($1,'123456',$2,'seed')`, [order2.order_id, PICKUP_SECRET]);
 
     const referral = await one<{ referral_id: string }>(
@@ -397,7 +397,7 @@ try {
       [CUSTOMERS[2].id, STATIONS[2].id, JSON.stringify([{ sku: 'FSH-001', quantity: 1 }]), hash, expires, 'seed-order-3'],
     );
     await client.query(`SELECT eg_pay_order($1,'demo_pay','TXN-SEED-3','seed-pay-3','seed')`, [order3.order_id]);
-    await client.query(`UPDATE orders SET status = 'ready' WHERE id = $1`, [order3.order_id]);
+    await client.query(`SELECT eg_mark_order_ready($1,'seed')`, [order3.order_id]);
 
     await client.query(
       `SELECT eg_create_order($1,$2,$3::jsonb,0,15,$4,$5,NULL,$6,'seed')`,

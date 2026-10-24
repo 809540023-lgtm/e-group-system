@@ -30,7 +30,8 @@
     "start:egroup": "npm run start --workspace @eg/web",
     "db:migrate:egroup": "npm run db:migrate --workspace @eg/web",
     "db:seed:egroup": "npm run db:seed --workspace @eg/web",
-    "test:integration:egroup": "vitest run apps/egroup/test/integration.test.ts"
+    "test:integration:egroup": "vitest run apps/egroup/test/integration.test.ts",
+    "db:reset:egroup": "npm run db:reset --workspace @eg/web"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

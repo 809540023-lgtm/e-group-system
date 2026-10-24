@@ -47,6 +47,8 @@ export interface StationRow {
   competition_score: number;
   food_safety_pass: boolean;
   venue_pass: boolean;
+  lat: string | null;
+  lng: string | null;
 }
 
 export interface OrderRow {

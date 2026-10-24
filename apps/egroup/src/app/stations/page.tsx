@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { scoreStation, sameCorridor } from '@eg/meal';
 import { Badge, Card, Notice, PageHeader, Stat } from '../../components/ui.tsx';
 import { STATION_TYPE_LABELS } from '../../lib/format.ts';
@@ -27,6 +28,7 @@ export default async function StationsPage() {
       <PageHeader
         title="取貨站點"
         subtitle="A 型店中取貨、B 型自助冷鏈櫃、C 型加熱組餐、D 型區域補給。選址以食安與場地為門檻，再比較 100 分模型。"
+        actions={<Link className="btn btn-ghost" href="/stations/map">站點地圖</Link>}
       />
 
       <div className="grid grid-4">
