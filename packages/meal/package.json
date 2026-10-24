@@ -1,0 +1,13 @@
+{
+  "name": "@eg/meal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "雙北捷運健康餐食節點網路 — 交易與營運規則",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

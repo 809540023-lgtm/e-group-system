@@ -24,7 +24,13 @@
     "db:smoke": "node --experimental-strip-types packages/db/src/cli/smoke.ts",
     "sync:preview": "node --experimental-strip-types apps/worker/src/cli/sync-preview.ts",
     "start:worker": "npm run start --workspace @jp/worker",
-    "start:web": "npm run start --workspace @jp/web"
+    "start:web": "npm run start --workspace @jp/web",
+    "dev:egroup": "npm run dev --workspace @eg/web",
+    "build:egroup": "npm run build --workspace @eg/web",
+    "start:egroup": "npm run start --workspace @eg/web",
+    "db:migrate:egroup": "npm run db:migrate --workspace @eg/web",
+    "db:seed:egroup": "npm run db:seed --workspace @eg/web",
+    "test:integration:egroup": "vitest run apps/egroup/test/integration.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

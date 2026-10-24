@@ -95,6 +95,85 @@ npm run dev:worker
 - `GET /api/healthz`：程序存活
 - `GET /api/readyz`：資料庫與必要設定就緒
 
+## 第二個系統：雙北捷運健康餐食節點網路（`apps/egroup`）
+
+同一個 monorepo 內另有第二個獨立系統，對應《完整規劃計畫書 v1.0｜雙北捷運健康餐食節點網路》第十五章的系統範圍。
+它與日本代購系統**共用 workspace 與工具鏈，但資料庫、環境變數、連接埠完全分開**。
+
+```
+apps/egroup        Next.js App Router：顧客、供應商、加盟站點、總部、資產、AI 六個入口
+packages/meal      餐食領域規則（營養、站點評分、單店經濟、取貨碼、推薦、召回、溫層、預測、結算）
+apps/egroup/db/migrations   001 資料模型、002 交易函式、003 營運函式、004 交易守則補強
+apps/egroup/scripts         migration 與 seed
+apps/egroup/test            資料庫整合測試（交易保證）
+```
+
+### 角色與入口
+
+| 角色 | 入口 | 內容 |
+| --- | --- | --- |
+| 顧客 | `/products`、`/cart`、`/checkout`、`/orders`、`/account`、`/recalls`、`/trace/[batchId]` | 選購、取貨碼、點數、推薦碼、退款、批次溯源 |
+| 供應商 | `/supplier/*` | 商品、批次、檢驗文件、出貨、異常回覆 |
+| 加盟站點 | `/station/*` | 收貨、溫層、庫存、交付核銷、加熱、隔離、結算、訓練 |
+| 總部 | `/admin/*` | 採購、補貨、定價、站點評分、品質、推薦、對帳、稽核、人員、AI |
+| 資產 | `/assets`、`/assets/[assetNo]` | 設備、租約、保養與折舊 |
+| 公開 | `/stations`、`/recalls` | 站點清單、召回公告 |
+
+### 快速開始
+
+```bash
+# 1. 準備資料庫（PostgreSQL 14 以上）
+createdb egroup_dev
+
+# 2. 環境變數（見 .env.example 的 EGROUP_ 區塊）
+export EGROUP_DATABASE_URL=postgres://127.0.0.1:5432/egroup_dev
+export EGROUP_SESSION_SECRET=dev-only-egroup-session-secret-change-me
+export EGROUP_PICKUP_SECRET=dev-only-egroup-pickup-secret-change-me
+
+# 3. 建結構與示範資料
+npm run db:migrate:egroup
+npm run db:seed:egroup
+
+# 4. 啟動（http://127.0.0.1:3100）
+npm run dev:egroup
+```
+
+示範帳號（密碼皆為 `demo1234`）：`admin@egroup.tw`、`supplier@egroup.tw`、`station@egroup.tw`、`customer@egroup.tw`、`customer2@egroup.tw`。
+示範取貨碼為 `123456`。
+
+### 指令
+
+| 指令 | 說明 |
+| --- | --- |
+| `npm run dev:egroup` | 開發伺服器（3100） |
+| `npm run build:egroup` | 生產建置 |
+| `npm run start:egroup` | 生產啟動（3100） |
+| `npm run db:migrate:egroup` | 套用 migration（含 checksum 守門） |
+| `npm run db:seed:egroup` | 寫入可重複執行的示範資料 |
+| `npm run test:integration:egroup` | 資料庫整合測試（自動建立 `egroup_test`） |
+
+### API
+
+| 端點 | 方法 | 說明 |
+| --- | --- | --- |
+| `/api/healthz` | GET | 程序存活 |
+| `/api/readyz` | GET | 資料庫與 migration 版本 |
+| `/api/catalog` | GET | 商品目錄（可用 `search`、`category`、`storage`、`excludeAllergens` 篩選） |
+| `/api/orders` | GET / POST | 顧客訂單列表 / 建立訂單（回傳一次性取貨碼） |
+| `/api/pickup` | POST | 站點核銷取貨碼（一次性、可帶 `clientEventId` 去重） |
+| `/api/recalls` | GET | 召回公告與通知進度 |
+| `/api/forecast` | GET | 需求預測與補貨建議（需 admin 或 supplier 工作階段） |
+
+### 交易保證（由 `apps/egroup/test/integration.test.ts` 驗證）
+
+1. 最後一件庫存同時下單，只有一張訂單成立，另一張回 `OUT_OF_STOCK`。
+2. 同一 `idempotencyKey` 重送不會重複建立訂單。
+3. 取貨碼只存 HMAC 雜湊、一次性核銷，錯誤碼不得通過。
+4. 離線事件以 `client_event_id` 去重，重送回 `duplicate`。
+5. 退款冪等、不得超過已付餘額，未交付時釋放庫存保留。
+6. 召回後停止銷售並阻擋交付；通知未送達不得結案。
+7. 站點結算同一期間不得重複計酬。
+
 ## 不可妥協的規則
 
 1. 已核准的臺幣售價**不得再次加價**（來源表已含加成）。
