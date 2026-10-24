@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Badge, Card, Notice, PageHeader, Stat, Table } from '../../../components/ui.tsx';
 import { formatTwd } from '../../../lib/format.ts';
 import {
@@ -9,6 +10,7 @@ import {
   previewComplianceCost,
 } from '../../../lib/capital.ts';
 import { requireRole } from '../../../lib/auth.ts';
+import { clarityActPhrasing } from '@eg/meal';
 
 const STAGE_LABEL: Readonly<Record<number, string>> = {
   1: '第一階段 · 自有資本與租賃',
@@ -112,6 +114,11 @@ export default async function StoPage() {
       <PageHeader
         title="STO 三階段與合規"
         subtitle="計畫書第十一章。三階段不得跳關；建立平台不等於取得發行或交易許可。"
+        actions={
+          <Link className="btn btn-ghost" href="/admin/regulatory">
+            法規脈絡
+          </Link>
+        }
       />
 
       <div className="grid grid-4">
@@ -129,6 +136,10 @@ export default async function StoPage() {
         <Notice tone="warn">
           不得把一般會員的買餐行為與取得可分紅證券代幣綁定；不得保本保息；不得用後期加盟金支付前期投資人；不得任意跨境募資。
         </Notice>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <Notice tone="warn">{clarityActPhrasing()}</Notice>
       </div>
 
       <div style={{ marginTop: 16 }}>

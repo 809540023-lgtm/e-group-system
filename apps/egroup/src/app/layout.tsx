@@ -66,6 +66,7 @@ function navFor(role: string | null): { group: string; items: NavItem[] }[] {
         { href: '/admin/rwa', label: 'RWA 代幣化' },
         { href: '/admin/sto', label: 'STO 三階段' },
         { href: '/admin/token', label: 'STO+ 代幣' },
+        { href: '/admin/regulatory', label: '法規脈絡' },
       ] },
     ];
   }

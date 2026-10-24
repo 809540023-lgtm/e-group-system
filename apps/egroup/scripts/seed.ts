@@ -684,6 +684,60 @@ try {
     [program.id],
   );
 
+  // 第二個計畫：已完成三階段的小規模設備收益權試點，用來驗證跨境要約的放行路徑。
+  const pilot = await one<{ id: string }>(
+    `INSERT INTO sto_programs(code, name, stage, status, target_instrument, issuer_entity, tpex_regime,
+       professional_investor_only, issuance_cap_twd, disclosure_doc_url, counsel_opinion_url,
+       securities_firm, approved_on, note)
+     VALUES ('STO-EG-002', '單站冷鏈設備收益權試點代幣', 3, 'live', 'equipment_right',
+       'EG 資產管理股份有限公司（規劃中）', '櫃買中心證券商經營證券型代幣業務管理規則',
+       true, 600000, 'https://example.invalid/disclosure/STO-EG-002', 'https://example.invalid/opinion/STO-EG-002',
+       '示範綜合證券', DATE '2026-09-15',
+       '僅限單一示範站點之設備租賃收益，規模上限 60 萬元，限專業投資人。')
+     ON CONFLICT (code) DO UPDATE SET stage = EXCLUDED.stage, status = EXCLUDED.status
+     RETURNING id`,
+  );
+
+  for (const requirement of [
+    { stage: 1, key: 'founder_capital', label: '創辦人資本到位', category: '資本', evidence: '現金部位表已建立', owner: '財務長' },
+    { stage: 1, key: 'equity_structure', label: '適法股權結構', category: '資本', evidence: '股東名冊與章程', owner: '法務' },
+    { stage: 1, key: 'supplier_terms', label: '供應商付款條件', category: '營運', evidence: '採購合約', owner: '採購' },
+    { stage: 1, key: 'equipment_lease', label: '設備租賃合約', category: '營運', evidence: '單站租約', owner: '資產管理' },
+    { stage: 2, key: 'audited_financials', label: '經會計師查核財報', category: '財務', evidence: '2026 上半年查核報告', owner: '財務長' },
+    { stage: 2, key: 'asset_inventory', label: '資產清冊與護照', category: '資產', evidence: 'EG-FRZ-0001 護照', owner: '資產管理' },
+    { stage: 2, key: 'lease_review', label: '租約法律審閱', category: '法律', evidence: '審閱意見書', owner: '法務' },
+    { stage: 2, key: 'station_performance', label: '站點績效與風險資料', category: '營運', evidence: 'KPI 與擴點關卡', owner: '營運' },
+    { stage: 2, key: 'counsel_opinion', label: '台灣證券法律意見書', category: '法律', evidence: '意見書已出具', owner: '法務' },
+    { stage: 2, key: 'securities_firm_assessment', label: '合格證券商評估', category: '法律', evidence: '示範綜合證券評估報告', owner: '資本市場' },
+    { stage: 3, key: 'issuance_approval', label: '發行核准', category: '監理', evidence: '核准函 2026-09-15', owner: '資本市場' },
+    { stage: 3, key: 'investor_eligibility', label: '投資人適格審查', category: '監理', evidence: '專業投資人名冊', owner: '法遵' },
+    { stage: 3, key: 'custody_arrangement', label: '保管與錢包安排', category: '營運', evidence: '多簽託管合約', owner: '資產管理' },
+    { stage: 3, key: 'distribution_mechanism', label: '分配機制與揭露', category: '營運', evidence: '分配瀑布與揭露文件', owner: '財務長' },
+  ]) {
+    await client.query(
+      `INSERT INTO sto_requirements(program_id, stage, key, label, category, status, blocking, evidence, owner)
+       VALUES ($1,$2,$3,$4,$5,'done',true,$6,$7)
+       ON CONFLICT (program_id, key) DO UPDATE SET status = 'done',
+         evidence = EXCLUDED.evidence, owner = EXCLUDED.owner, updated_at = now()`,
+      [pilot.id, requirement.stage, requirement.key, requirement.label, requirement.category,
+        requirement.evidence, requirement.owner],
+    );
+  }
+
+  for (const audit of [
+    { layer: 'code_security', auditor: '外部資安顧問', standard: 'OWASP ASVS L2', findings: '無高風險發現' },
+    { layer: 'legal', auditor: '台灣證券法律事務所', standard: '證交法與櫃買中心規則', findings: '意見書已出具' },
+    { layer: 'governance', auditor: '內部治理委員會', standard: '多簽與安全模式程序', findings: '多簽門檻 2/3 已建立' },
+    { layer: 'regulatory', auditor: '法遵部', standard: '監理沙盒與專業投資人限制', findings: '專業投資人限制已落實' },
+  ]) {
+    await client.query(
+      `INSERT INTO compliance_audits(program_id, layer, auditor, standard, status, performed_on, findings)
+       SELECT $1,$2,$3,$4,'passed',$5,$6
+       WHERE NOT EXISTS (SELECT 1 FROM compliance_audits WHERE program_id = $1 AND layer = $2)`,
+      [pilot.id, audit.layer, audit.auditor, audit.standard, day(-30), audit.findings],
+    );
+  }
+
   const holderSpecs = [
     { email: 'admin@egroup.tw', wallet: 'eg-admin-custody', addressClass: 'custody', kyc: 'verified', category: 'professional' },
     { email: 'admin@egroup.tw', wallet: 'eg-admin-market', addressClass: 'secondary_market', kyc: 'verified', category: 'professional' },
@@ -780,6 +834,224 @@ try {
         { lot: earnedLot.id, to: 'eg-cust-0002' },
       ]) {
         await client.query(`SELECT eg_transition_token_state($1,$2,'seed-capital')`, [step.lot, step.to]);
+      }
+    }
+  }
+
+  /* 監理環境：制度轉型、安全港、揭露、跨境要約、稅務會計              */
+  {
+    const regimes = [
+      {
+        code: 'US', name: '美國', posture: 'innovation_oriented',
+        framework: 'SEC／CFTC 聯合框架（Project Crypto）',
+        retail: true, professional: false, equivalenceRequired: false,
+        equivalenceDetermined: false, localLicense: false,
+        effectiveFrom: '2025-01-21',
+        source: 'SEC Staff Statements 2025；Project Crypto 聯合聲明 2025-09-02',
+        note: '2025 年由執法導向轉為規則導向；CLARITY Act 尚未成法，引用須用條件語氣。',
+        legitimacy: [true, true, true, true, false],
+      },
+      {
+        code: 'EU', name: '歐盟', posture: 'equivalence_required',
+        framework: 'MiCA',
+        retail: true, professional: false, equivalenceRequired: true,
+        equivalenceDetermined: false, localLicense: false,
+        effectiveFrom: '2024-06-30',
+        source: 'Regulation (EU) 2023/1114 第 16、60 條；ESMA Q&A 2024',
+        note: '第三國發行人須經等同性認定或設立歐盟分支機構。',
+        legitimacy: [true, true, true, true, true],
+      },
+      {
+        code: 'SG', name: '新加坡', posture: 'innovation_oriented',
+        framework: '支付服務法（PSA）',
+        retail: true, professional: false, equivalenceRequired: false,
+        equivalenceDetermined: false, localLicense: false,
+        effectiveFrom: '2020-01-28',
+        source: 'MAS Payment Services Act；Project Guardian',
+        note: '以監理沙盒與創新加速器扶植，為亞洲樞紐。',
+        legitimacy: [true, true, true, true, true],
+      },
+      {
+        code: 'HK', name: '香港', posture: 'innovation_oriented',
+        framework: 'SFC 虛擬資產服務提供者（VASP）牌照',
+        retail: true, professional: false, equivalenceRequired: false,
+        equivalenceDetermined: false, localLicense: false,
+        effectiveFrom: '2023-06-01',
+        source: 'SFC VASP 牌照制度',
+        note: '2023 年起開放零售參與，採選擇性開放。',
+        legitimacy: [true, true, true, true, true],
+      },
+      {
+        code: 'TW', name: '台灣', posture: 'restricted',
+        framework: '證券交易法與櫃買中心證券型代幣規範',
+        retail: false, professional: true, equivalenceRequired: false,
+        equivalenceDetermined: false, localLicense: false,
+        effectiveFrom: '2020-01-01',
+        source: '櫃買中心證券型代幣發行與交易規則',
+        note: '有專業投資人人數上限；建立平台不等於取得發行或交易許可。',
+        legitimacy: [true, true, true, true, true],
+      },
+    ];
+
+    for (const regime of regimes) {
+      await client.query(
+        `INSERT INTO regulatory_regimes (
+           code, name, posture, framework, retail_allowed, professional_only,
+           equivalence_required, equivalence_determined, local_license_held,
+           effective_from, source, note,
+           transparent_rulemaking, multi_stakeholder, continuous_disclosure,
+           independent_judgment, accountability
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+         ON CONFLICT (code) DO NOTHING`,
+        [
+          regime.code, regime.name, regime.posture, regime.framework,
+          regime.retail, regime.professional, regime.equivalenceRequired,
+          regime.equivalenceDetermined, regime.localLicense,
+          regime.effectiveFrom, regime.source, regime.note,
+          ...regime.legitimacy,
+        ],
+      );
+    }
+
+    const events = [
+      { date: '2020-12-22', kind: 'enforcement', title: 'SEC 對 Ripple 提起訴訟', summary: '執法監管期的代表性案件，以訴訟建立規則而非以規則明確標準。', posture: 'enforcement_led' },
+      { date: '2023-07-13', kind: 'enforcement', title: 'SEC v. Ripple Labs 部分敗訴', summary: '法院認定 XRP 在程序化銷售中不構成證券，削弱執法立場的法律基礎。', posture: 'enforcement_led' },
+      { date: '2023-08-29', kind: 'enforcement', title: 'Grayscale 案裁定 SEC 拒絕現貨 ETF 為任意反覆', summary: '司法挫折累積，成為 2025 年轉向的正當性來源之一。', posture: 'enforcement_led' },
+      { date: '2025-01-20', kind: 'personnel', title: 'Gensler 辭去 SEC 主席', summary: '關鍵時刻：既有制度均衡被打破，新軌跡得以確立。', posture: 'enforcement_led' },
+      { date: '2025-01-21', kind: 'personnel', title: '成立 Crypto Task Force，由 Peirce 領導', summary: 'Uyeda 代理主席期間的過渡措施，重啟規則制定議程。', posture: 'innovation_oriented' },
+      { date: '2025-01-23', kind: 'accounting', title: '撤銷 SAB 121，改以 SAB 122 處理託管義務', summary: '由強制負債認列改為或有負債判斷，解除銀行進入加密託管的會計障礙。', posture: 'innovation_oriented' },
+      { date: '2025-02-27', kind: 'guidance', title: '迷因幣指引：通常不構成證券', summary: '改採事實導向的個案分析，不再一概而論。', posture: 'innovation_oriented' },
+      { date: '2025-03-20', kind: 'guidance', title: 'PoW 挖礦指引：挖礦本身不構成證券交易', summary: '礦工以算力換取獎勵屬服務對價，不符合 Howey 的「來自他人努力」。', posture: 'innovation_oriented' },
+      { date: '2025-04-04', kind: 'guidance', title: '穩定幣指引：足額儲備的特定穩定幣不構成證券', summary: '購買者合理期待價值穩定而非利潤；「充足儲備」範圍仍待明確。', posture: 'innovation_oriented' },
+      { date: '2025-04-21', kind: 'personnel', title: 'Paul Atkins 接任 SEC 主席', summary: '監理哲學由風險規避轉向創新促進，由執法導向轉向規則導向。', posture: 'innovation_oriented' },
+      { date: '2025-05-29', kind: 'legislation', title: 'CLARITY Act（H.R. 3633）提出', summary: '試圖劃分 SEC 與 CFTC 管轄權、建立資產分類標準與 DeFi 安全港。', posture: 'innovation_oriented' },
+      { date: '2025-07-17', kind: 'legislation', title: 'CLARITY Act 通過眾議院', summary: '仍待參議院全院審議、兩院版本協調與總統簽署，尚未成法。', posture: 'innovation_oriented' },
+      { date: '2025-08-05', kind: 'guidance', title: '流動性質押指引：非託管質押不構成證券', summary: '區分託管與非託管質押；流動性質押代幣的法律地位仍待釐清。', posture: 'innovation_oriented' },
+      { date: '2025-09-02', kind: 'coordination', title: 'SEC-CFTC 聯合聲明：Project Crypto 與 Crypto Sprint', summary: '建立聯合工作組，目標 2026 年完成初步聯合框架。', posture: 'innovation_oriented' },
+      { date: '2026-05-14', kind: 'legislation', title: '參議院銀行委員會以 15-9 通過市場結構法案版本', summary: '仍待參議院全院審議、兩院協調與總統簽署；引用須用條件語氣。', posture: 'innovation_oriented' },
+    ];
+
+    for (const event of events) {
+      await client.query(
+        `INSERT INTO regulatory_events (regime_code, event_date, kind, title, summary, posture_after, source)
+         VALUES ('US', $1, $2, $3, $4, $5, '論文第三章第二節')
+         ON CONFLICT (regime_code, event_date, title) DO NOTHING`,
+        [event.date, event.kind, event.title, event.summary, event.posture],
+      );
+    }
+
+    const harbors = [
+      {
+        ref: 'SH-EG-001', kind: 'temporary_safe_harbor', regime: 'US',
+        applicant: '雙北健康餐食節點網路', subject: '冷鏈設備收益權代幣（STO-EG-001）',
+        status: 'submitted', goodFaith: true, measures: true, cadence: 'semiannual',
+        opened: '2026-06-01', expires: '2027-12-31', extension: 0,
+        userCap: null, volumeCap: null, exit: 'none', published: true,
+      },
+      {
+        ref: 'SH-EG-002', kind: 'sandbox', regime: 'SG',
+        applicant: '雙北健康餐食節點網路', subject: '代幣化設備租賃收益跨境試點',
+        status: 'draft', goodFaith: true, measures: true, cadence: 'quarterly',
+        opened: '2026-09-01', expires: '2028-09-01', extension: 12,
+        userCap: 200, volumeCap: 5_000_000, exit: 'modified', published: true,
+      },
+      {
+        ref: 'SH-EG-003', kind: 'no_action_letter', regime: 'US',
+        applicant: '雙北健康餐食節點網路', subject: '非託管錢包與自託管權利確認',
+        status: 'granted', goodFaith: true, measures: true, cadence: 'annual',
+        opened: '2026-03-01', expires: '2028-02-28', extension: 0,
+        userCap: null, volumeCap: null, exit: 'approved', published: true,
+      },
+      {
+        ref: 'SH-EG-004', kind: 'sandbox', regime: 'TW',
+        applicant: '雙北健康餐食節點網路', subject: '未取得規模上限的沙盒申請（示範阻擋）',
+        status: 'rejected', goodFaith: true, measures: false, cadence: 'none',
+        opened: '2026-04-01', expires: '2029-04-01', extension: 18,
+        userCap: null, volumeCap: null, exit: 'none', published: false,
+      },
+    ];
+
+    for (const harbor of harbors) {
+      await client.query(
+        `INSERT INTO safe_harbor_applications (
+           reference_no, kind, regime_code, applicant, subject, status,
+           good_faith, compliance_measures, reporting_cadence,
+           opened_on, expires_on, extension_months, user_cap, volume_cap_twd,
+           exit_mechanism, published
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+         ON CONFLICT (reference_no) DO NOTHING`,
+        [
+          harbor.ref, harbor.kind, harbor.regime, harbor.applicant, harbor.subject,
+          harbor.status, harbor.goodFaith, harbor.measures, harbor.cadence,
+          harbor.opened, harbor.expires, harbor.extension, harbor.userCap,
+          harbor.volumeCap, harbor.exit, harbor.published,
+        ],
+      );
+    }
+
+    const disclosures = [
+      { type: 'staking', ref: 'STO-EG-001', key: 'yield_calculation', label: '收益率計算方法', satisfied: true, evidence: '白皮書 §4.2 收益分配公式' },
+      { type: 'staking', ref: 'STO-EG-001', key: 'slashing_risk', label: '削減風險（Slashing）', satisfied: true, evidence: '風險揭露 §6.1' },
+      { type: 'staking', ref: 'STO-EG-001', key: 'unlock_period', label: '解鎖期', satisfied: false, evidence: null },
+      { type: 'custody', ref: 'EG-CUSTODY-01', key: 'key_management', label: '私鑰管理', satisfied: true, evidence: '託管作業手冊 v1.2' },
+      { type: 'custody', ref: 'EG-CUSTODY-01', key: 'self_custody_right', label: '自託管權利', satisfied: true, evidence: '不採取行動信函 SH-EG-003' },
+      { type: 'custody', ref: 'EG-CUSTODY-01', key: 'segregation', label: '客戶資產隔離', satisfied: false, evidence: null },
+      { type: 'token_issuance', ref: 'STO-EG-001', key: 'underlying_asset', label: '底層資產', satisfied: true, evidence: '資產護照 EG-FRZ-0001／EG-CHL-0001／EG-HTR-0001' },
+      { type: 'token_issuance', ref: 'STO-EG-001', key: 'transfer_restriction', label: '轉讓限制', satisfied: true, evidence: 'Rule 144 鎖定與地址類別規則' },
+      { type: 'token_issuance', ref: 'STO-EG-001', key: 'investor_eligibility', label: '投資人適格條件', satisfied: true, evidence: '限專業投資人，KYC 須完成' },
+      { type: 'token_issuance', ref: 'STO-EG-001', key: 'risk_factors', label: '風險因素', satisfied: false, evidence: null },
+    ];
+
+    for (const item of disclosures) {
+      await client.query(
+        `INSERT INTO disclosure_obligations (
+           subject_type, subject_ref, item_key, label, required, satisfied, evidence, satisfied_at
+         ) VALUES ($1,$2,$3,$4,true,$5,$6,$7)
+         ON CONFLICT (subject_type, subject_ref, item_key) DO NOTHING`,
+        [
+          item.type, item.ref, item.key, item.label, item.satisfied, item.evidence,
+          item.satisfied ? new Date().toISOString() : null,
+        ],
+      );
+    }
+
+    const treatments = [
+      { kind: 'mining_reward', label: 'PoW 挖礦或 PoS 驗證者報酬', tax: '取得可支配控制時，按公允市場價值認列普通所得；營業活動可能另有自雇稅或費用扣除。', accounting: '符合 ASU 2023-08 範圍者，後續按公允價值衡量，變動計入損益。', caveat: '證券法上屬技術功能，不排除稅法上構成所得。', authority: 'IRS Notice 2014-21；FASB ASU 2023-08' },
+      { kind: 'staking_reward', label: '非託管質押獎勵', tax: '依 Rev. Rul. 2023-14，於取得支配權與控制權時按公允市場價值認列。', accounting: '獎勵與原持有代幣分別追蹤成本基礎及公允價值。', caveat: '須區分自行質押與第三方託管質押，避免把證券法分析與稅法時點混同。', authority: 'Rev. Rul. 2023-14' },
+      { kind: 'liquid_staking_swap', label: '流動性質押代幣交換', tax: '可能被主張為非處分，也可能因權利實質不同而被視為交換；爭議未定。', accounting: '須揭露衍生代幣估值、贖回風險、折價與流動性風險。', caveat: '不可斷言不課稅；IRS 尚未提供完整專門規則。', authority: 'Eisner v. Macomber；Cottage Savings' },
+      { kind: 'gas_fee', label: 'Gas fee 與優先費', tax: '若為取得或處分資產所必要，可能資本化為成本基礎或處分成本；營業使用可作費用。', accounting: '平台或驗證者收取優先費時，按收入確認邏輯處理。', caveat: '個人投資人、企業、平台三者處理不同。', authority: 'IRS Notice 2014-21' },
+      { kind: 'platform_custody', label: '平台託管或混合託管', tax: '重點在受益所有權與資訊申報；是否產生所得取決於資產處分或收益分配。', accounting: 'SAB 122 後不再機械式認列託管負債，改依 ASC 450-20 或 IAS 37 判斷。', caveat: '託管會計現代化不等於免除風險揭露、內控與資本要求。', authority: 'SEC SAB 122；ASC 450-20／IAS 37' },
+      { kind: 'cross_border_reporting', label: '跨境申報與 CARF', tax: '平台與中介可能面臨資訊申報、資料交換與 Form 1099-DA 等制度銜接。', accounting: '須建立使用者、地址、交易與受益所有權的可稽核流程。', caveat: '跨境稅務合作可能與隱私、去中心化及資料最小化原則衝突。', authority: 'OECD CARF；IRS Form 1099-DA' },
+    ];
+
+    for (const item of treatments) {
+      await client.query(
+        `INSERT INTO tax_accounting_treatments (kind, label, tax_treatment, accounting_treatment, caveat, authority)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (kind) DO NOTHING`,
+        [item.kind, item.label, item.tax, item.accounting, item.caveat, item.authority],
+      );
+    }
+
+    const already = await one<{ count: string }>(
+      `SELECT count(*)::text AS count FROM cross_border_assessments WHERE assessed_by = 'seed-regulatory'`,
+    );
+    if (already?.count === '0') {
+      for (const step of [
+        { code: 'STO-EG-001', regime: 'US', holder: 'professional' },
+        { code: 'STO-EG-001', regime: 'EU', holder: 'professional' },
+        { code: 'STO-EG-001', regime: 'TW', holder: 'professional' },
+        { code: 'STO-EG-002', regime: 'US', holder: 'professional' },
+        { code: 'STO-EG-002', regime: 'EU', holder: 'professional' },
+        { code: 'STO-EG-002', regime: 'TW', holder: 'professional' },
+        { code: 'STO-EG-002', regime: 'SG', holder: 'general' },
+        { code: 'STO-EG-002', regime: 'HK', holder: 'professional' },
+      ]) {
+        const target = await one<{ id: string }>('SELECT id FROM sto_programs WHERE code = $1', [step.code]);
+        if (target === null) continue;
+        await client.query(`SELECT eg_assess_cross_border($1,$2,$3,'seed-regulatory')`, [
+          target.id, step.regime, step.holder,
+        ]);
       }
     }
   }

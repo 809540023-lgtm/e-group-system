@@ -701,3 +701,133 @@ describe.skipIf(!available)('資本市場交易保證', () => {
     expect(runs.rows[0]!.distributable_twd).toBe(22_800);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* 監理環境：跨境要約守門                                              */
+/* ------------------------------------------------------------------ */
+
+type RegulatoryFixture = {
+  suffix: string;
+  liveProgramId: string;
+  draftProgramId: string;
+};
+
+async function createRegulatoryFixture(): Promise<RegulatoryFixture> {
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  for (const regime of [
+    { code: 'US', name: '美國', posture: 'innovation_oriented', retail: true, professional: false, equivalence: false },
+    { code: 'EU', name: '歐盟', posture: 'equivalence_required', retail: true, professional: false, equivalence: true },
+    { code: 'TW', name: '台灣', posture: 'restricted', retail: false, professional: true, equivalence: false },
+  ]) {
+    await db().query(
+      `INSERT INTO regulatory_regimes(code, name, posture, framework, retail_allowed,
+         professional_only, equivalence_required)
+       VALUES ($1,$2,$3,'整合測試框架',$4,$5,$6)
+       ON CONFLICT (code) DO NOTHING`,
+      [regime.code, regime.name, regime.posture, regime.retail, regime.professional, regime.equivalence],
+    );
+  }
+
+  const makeProgram = async (stage: number): Promise<string> => {
+    const row = await db().query<{ id: string }>(
+      `INSERT INTO sto_programs(code, name, stage, status, target_instrument, professional_investor_only)
+       VALUES ($1, $2, $3, 'live', 'equipment_right', true) RETURNING id`,
+      [`IT-REG-${stage}-${suffix}`, `整合測試監理計畫 ${stage} ${suffix}`, stage],
+    );
+    return row.rows[0]!.id;
+  };
+
+  return {
+    suffix,
+    liveProgramId: await makeProgram(3),
+    draftProgramId: await makeProgram(2),
+  };
+}
+
+describe.skipIf(!available)('監理環境交易保證', () => {
+  it('未達第三階段的計畫不得跨境要約，且仍留下評估紀錄', async () => {
+    const fixture = await createRegulatoryFixture();
+
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'US', 'professional', 'integration-test') AS result`,
+      [fixture.draftProgramId],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('STAGE_NOT_REACHED');
+
+    const rows = await db().query<{ decision_code: string; allowed: boolean }>(
+      'SELECT decision_code, allowed FROM cross_border_assessments WHERE program_id = $1',
+      [fixture.draftProgramId],
+    );
+    expect(rows.rowCount).toBe(1);
+    expect(rows.rows[0]!.decision_code).toBe('STAGE_NOT_REACHED');
+    expect(rows.rows[0]!.allowed).toBe(false);
+  });
+
+  it('限制或禁止類的目的地一律阻擋', async () => {
+    const fixture = await createRegulatoryFixture();
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'TW', 'professional', 'integration-test') AS result`,
+      [fixture.liveProgramId],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('RESTRICTED_JURISDICTION');
+  });
+
+  it('須等同性認定而未取得時阻擋，取得後放行', async () => {
+    const fixture = await createRegulatoryFixture();
+
+    const blocked = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'EU', 'professional', 'integration-test') AS result`,
+      [fixture.liveProgramId],
+    );
+    expect(blocked.rows[0]!.result.code).toBe('EQUIVALENCE_MISSING');
+
+    await db().query(`UPDATE regulatory_regimes SET equivalence_determined = true WHERE code = 'EU'`);
+
+    const allowed = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'EU', 'professional', 'integration-test') AS result`,
+      [fixture.liveProgramId],
+    );
+    expect(allowed.rows[0]!.result.ok).toBe(true);
+    expect(allowed.rows[0]!.result.code).toBe('ALLOWED');
+
+    await db().query(`UPDATE regulatory_regimes SET equivalence_determined = false WHERE code = 'EU'`);
+  });
+
+  it('限專業投資人的計畫不得由一般投資人受讓證券狀態', async () => {
+    const fixture = await createRegulatoryFixture();
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'US', 'general', 'integration-test') AS result`,
+      [fixture.liveProgramId],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('PROFESSIONAL_ONLY');
+  });
+
+  it('未登錄的監理體制不得要約', async () => {
+    const fixture = await createRegulatoryFixture();
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_assess_cross_border($1, 'ZZ', 'professional', 'integration-test') AS result`,
+      [fixture.liveProgramId],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('REGIME_UNKNOWN');
+  });
+
+  it('每次跨境評估都寫入稽核軌跡', async () => {
+    const fixture = await createRegulatoryFixture();
+    await db().query(
+      `SELECT eg_assess_cross_border($1, 'US', 'professional', 'integration-test')`,
+      [fixture.liveProgramId],
+    );
+
+    const audit = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_events
+        WHERE action = 'cross_border.assess' AND entity_id = $1`,
+      [fixture.liveProgramId],
+    );
+    expect(audit.rows[0]!.count).toBe('1');
+  });
+});
