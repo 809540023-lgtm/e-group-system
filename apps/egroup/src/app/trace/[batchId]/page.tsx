@@ -4,8 +4,11 @@ import { Badge, Card, KeyValue, PageHeader, Table } from '../../../components/ui
 import { formatDate, formatDateTime, TEMPERATURE_STATUS_LABELS } from '../../../lib/format.ts';
 import { getTrace } from '../../../lib/queries.ts';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function TracePage({ params }: { params: Promise<{ batchId: string }> }) {
   const { batchId } = await params;
+  if (!UUID_PATTERN.test(batchId)) notFound();
   const trace = await getTrace(batchId);
   if (trace.batch === null) notFound();
 
