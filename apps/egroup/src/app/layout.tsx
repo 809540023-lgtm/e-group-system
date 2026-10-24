@@ -50,6 +50,8 @@ function navFor(role: string | null): { group: string; items: NavItem[] }[] {
       { group: '總部', items: [
         { href: '/admin', label: '營運儀表板' },
         { href: '/admin/kpi', label: '績效指標' },
+        { href: '/admin/gates', label: '擴點關卡' },
+        { href: '/admin/economics', label: '單位經濟' },
         { href: '/admin/procurement', label: '採購管理' },
         { href: '/admin/replenishment', label: '補貨預測' },
         { href: '/admin/pricing', label: '商品定價' },

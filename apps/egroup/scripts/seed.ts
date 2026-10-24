@@ -64,6 +64,7 @@ const STATIONS = [
     walk: 3,
     corridor: '中山－雙連',
     capacity: 180,
+    fixedCost: 30000,
     hours: '11:00-21:00',
     contact: '站長 林怡君 02-2511-0001',
     scores: [28, 16, 18, 13, 12],
@@ -79,6 +80,7 @@ const STATIONS = [
     walk: 2,
     corridor: '中山－雙連',
     capacity: 90,
+    fixedCost: 22000,
     hours: '24 小時',
     contact: '維運 陳柏宇 02-2555-0002',
     scores: [24, 18, 19, 14, 11],
@@ -94,6 +96,7 @@ const STATIONS = [
     walk: 5,
     corridor: '中山－雙連',
     capacity: 120,
+    fixedCost: 48000,
     hours: '10:30-20:30',
     contact: '站長 黃士豪 02-2588-0003',
     scores: [22, 14, 16, 12, 10],
@@ -109,6 +112,7 @@ const STATIONS = [
     walk: 8,
     corridor: '中山－雙連',
     capacity: 300,
+    fixedCost: 65000,
     hours: '06:00-22:00',
     contact: '物流 張文豪 02-2599-0004',
     scores: [18, 19, 17, 15, 9],
@@ -210,17 +214,43 @@ try {
     await client.query(
       `INSERT INTO stations(id, code, name, type, address, mrt_line, mrt_station, walk_minutes, corridor,
          status, capacity, opening_hours, contact, demand_score, cost_score, cold_chain_score,
-         replenishment_score, competition_score, food_safety_pass, venue_pass)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'active',$10,$11,$12,$13,$14,$15,$16,$17,true,true)
+         replenishment_score, competition_score, food_safety_pass, venue_pass, monthly_fixed_cost_twd)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'active',$10,$11,$12,$13,$14,$15,$16,$17,true,true,$18)
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, address = EXCLUDED.address,
-         capacity = EXCLUDED.capacity, opening_hours = EXCLUDED.opening_hours, contact = EXCLUDED.contact`,
+         capacity = EXCLUDED.capacity, opening_hours = EXCLUDED.opening_hours, contact = EXCLUDED.contact,
+         monthly_fixed_cost_twd = EXCLUDED.monthly_fixed_cost_twd`,
       [
         station.id, station.code, station.name, station.type, station.address, station.line, station.mrt,
         station.walk, station.corridor, station.capacity, station.hours, station.contact,
-        ...station.scores,
+        ...station.scores, station.fixedCost,
       ],
     );
   }
+
+  // 計畫書第十四章：試點資金分三關放款，資金承諾與現金部位是擴點關卡的證據來源。
+  const FUNDING = [
+    { label: '創辦人資本', amount: 1_500_000, status: 'received', note: '第一階段自有資金' },
+    { label: '設備租賃融資', amount: 450_000, status: 'received', note: '冷鏈設備與感測器' },
+    { label: '首批存貨週轉', amount: 300_000, status: 'received', note: '供應商付款條件' },
+    { label: '下一站設備採購', amount: 450_000, status: 'committed', note: '試點達標後才投入' },
+  ] as const;
+
+  for (const item of FUNDING) {
+    await client.query(
+      `INSERT INTO funding_commitments(label, amount_twd, status, note)
+       SELECT $1, $2, $3, $4
+        WHERE NOT EXISTS (SELECT 1 FROM funding_commitments WHERE label = $1)`,
+      [item.label, item.amount, item.status, item.note],
+    );
+  }
+
+  await client.query(
+    `INSERT INTO cash_positions(as_of, available_twd, committed_obligations_twd, worst_case_twd, note)
+     VALUES (current_date, 1850000, 620000, 1230000, '試點期每月更新')
+     ON CONFLICT (as_of) DO UPDATE SET available_twd = EXCLUDED.available_twd,
+       committed_obligations_twd = EXCLUDED.committed_obligations_twd,
+       worst_case_twd = EXCLUDED.worst_case_twd, note = EXCLUDED.note`,
+  );
 
   for (const customer of CUSTOMERS) {
     await client.query(
@@ -408,6 +438,64 @@ try {
       `SELECT eg_settle_station($1, current_date, current_date, 40, 0, '[]'::jsonb, 'seed')`,
       [STATIONS[0].id],
     );
+  }
+
+  // 歷史訂單：讓「連續 8 週單筆貢獻為正」與站點可持續性有真實資料可判讀。
+  // 一律走正式函式建立，再把時間欄位整體往前平移，維持事件先後順序。
+  const historyCount = await one<{ count: string }>(
+    `SELECT count(*)::text AS count FROM audit_events WHERE actor_id = 'seed-history' AND action = 'order.create'`,
+  );
+  if (historyCount.count === '0') {
+    const hash = pickupHash('123456');
+    const expires = new Date(Date.now() + 3 * 86_400_000).toISOString();
+    const plan = [
+      { sku: 'CHK-001', qty: 2, station: 0, customer: 0 },
+      { sku: 'BEF-001', qty: 1, station: 1, customer: 1 },
+      { sku: 'FSH-001', qty: 1, station: 2, customer: 2 },
+      { sku: 'VEG-001', qty: 2, station: 0, customer: 1 },
+      { sku: 'GRN-001', qty: 1, station: 3, customer: 2 },
+      { sku: 'CHK-002', qty: 1, station: 0, customer: 0 },
+    ] as const;
+
+    for (let week = 1; week <= 8; week += 1) {
+      for (let index = 0; index < 3; index += 1) {
+        const line = plan[(week + index) % plan.length]!;
+        const daysAgo = week * 7 - index * 2;
+        const created = await one<{ order_id: string }>(
+          `SELECT (eg_create_order($1,$2,$3::jsonb,0,15,$4,$5,NULL,$6,'seed-history'))->>'order_id' AS order_id`,
+          [
+            CUSTOMERS[line.customer]!.id,
+            STATIONS[line.station]!.id,
+            JSON.stringify([{ sku: line.sku, quantity: line.qty }]),
+            hash,
+            expires,
+            `seed-history-${week}-${index}`,
+          ],
+        );
+        const orderId = created.order_id;
+        await client.query(`SELECT eg_pay_order($1,'demo_pay',$2,$3,'seed-history')`, [
+          orderId,
+          `TXN-HIST-${week}-${index}`,
+          `seed-history-pay-${week}-${index}`,
+        ]);
+        await client.query(`SELECT eg_mark_order_ready($1,'seed-history')`, [orderId]);
+        await client.query(`SELECT eg_deliver_order($1,'123456',$2,'seed-history')`, [orderId, PICKUP_SECRET]);
+
+        const shift = `${daysAgo} * interval '1 day'`;
+        await client.query(
+          `UPDATE orders
+              SET created_at = created_at - ${shift},
+                  promised_ready_at = promised_ready_at - ${shift},
+                  updated_at = updated_at - ${shift}
+            WHERE id = $1`,
+          [orderId],
+        );
+        await client.query(`UPDATE payments SET created_at = created_at - ${shift} WHERE order_id = $1`, [orderId]);
+        await client.query(`UPDATE deliveries SET delivered_at = delivered_at - ${shift} WHERE order_id = $1`, [orderId]);
+        await client.query(`UPDATE audit_events SET created_at = created_at - ${shift} WHERE entity_id = $1::text`, [orderId]);
+        await client.query(`UPDATE inventory_movements SET created_at = created_at - ${shift} WHERE ref_id = $1::text`, [orderId]);
+      }
+    }
   }
 
   const freezer = await one<{ id: string }>('SELECT id FROM equipment WHERE asset_no = $1', ['EG-FRZ-0001']);

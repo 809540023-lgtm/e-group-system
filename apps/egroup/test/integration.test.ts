@@ -173,6 +173,62 @@ describe.skipIf(!available)('資料庫交易保證', () => {
     expect(batch.rows[0]!.quantity_reserved).toBe(1);
   });
 
+  it('12 人同時搶 5 件庫存，恰好 5 張訂單成立且不超賣', async () => {
+    const fixture = await createFixture(5);
+    const buyers = 12;
+
+    const results = await Promise.allSettled(
+      Array.from({ length: buyers }, (_, index) => createOrder(fixture, 1, `it-oversell-${fixture.suffix}-${index}`)),
+    );
+
+    const fulfilled = results.filter((item) => item.status === 'fulfilled');
+    const rejected = results.filter((item) => item.status === 'rejected');
+    expect(fulfilled).toHaveLength(5);
+    expect(rejected).toHaveLength(buyers - 5);
+    for (const item of rejected) {
+      expect((item as PromiseRejectedResult).reason.message).toMatch(/^OUT_OF_STOCK/);
+    }
+
+    const batch = await db().query<{ quantity_available: number; quantity_reserved: number }>(
+      'SELECT quantity_available, quantity_reserved FROM batches WHERE id = $1',
+      [fixture.batchId],
+    );
+    expect(batch.rows[0]!.quantity_reserved).toBe(5);
+    expect(batch.rows[0]!.quantity_reserved).toBeLessThanOrEqual(batch.rows[0]!.quantity_available);
+
+    const sold = await db().query<{ units: string }>(
+      `SELECT COALESCE(SUM(oi.quantity), 0)::text AS units
+         FROM order_items oi JOIN orders o ON o.id = oi.order_id
+        WHERE o.customer_id = $1`,
+      [fixture.customerId],
+    );
+    expect(sold.rows[0]!.units).toBe('5');
+  });
+
+  it('同一張訂單重複付款不會重複入帳', async () => {
+    const fixture = await createFixture(3);
+    const order = await createOrder(fixture, 1, `it-pay-${fixture.suffix}`);
+    const key = `it-pay-key-${fixture.suffix}`;
+
+    const first = await db().query<{ result: { status: string } }>(
+      `SELECT eg_pay_order($1,'mock',$2,$3,'integration-test') AS result`,
+      [order.order_id, `txn-${key}`, key],
+    );
+    expect(first.rows[0]!.result.status).toBe('paid');
+
+    const second = await db().query<{ result: { status: string } }>(
+      `SELECT eg_pay_order($1,'mock',$2,$3,'integration-test') AS result`,
+      [order.order_id, `txn-${key}`, key],
+    );
+    expect(second.rows[0]!.result.status).toBe('duplicate');
+
+    const payments = await db().query<{ count: string }>(
+      'SELECT count(*)::text AS count FROM payments WHERE order_id = $1',
+      [order.order_id],
+    );
+    expect(payments.rows[0]!.count).toBe('1');
+  });
+
   it('相同 idempotency key 重送不會重複建立訂單', async () => {
     const fixture = await createFixture(5);
     const key = `it-idem-${fixture.suffix}`;
