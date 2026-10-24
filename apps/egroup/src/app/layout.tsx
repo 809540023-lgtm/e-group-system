@@ -63,6 +63,9 @@ function navFor(role: string | null): { group: string; items: NavItem[] }[] {
         { href: '/admin/staff', label: '人員帳號' },
         { href: '/admin/ai', label: 'AI 客服' },
         { href: '/assets', label: '資產管理' },
+        { href: '/admin/rwa', label: 'RWA 代幣化' },
+        { href: '/admin/sto', label: 'STO 三階段' },
+        { href: '/admin/token', label: 'STO+ 代幣' },
       ] },
     ];
   }

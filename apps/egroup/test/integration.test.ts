@@ -372,3 +372,332 @@ describe.skipIf(!available)('資料庫交易保證', () => {
     expect(ready.rows[0]!.ready_at).not.toBeNull();
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* 資本市場：RWA 分配、STO+ 狀態機、Social Mining                        */
+/* ------------------------------------------------------------------ */
+
+type CapitalFixture = {
+  suffix: string;
+  programId: string;
+  ruleId: string;
+  vehicleId: string;
+  platformHolderId: string;
+  marketHolderId: string;
+  custodyHolderId: string;
+  pendingHolderId: string;
+  generalMarketHolderId: string;
+};
+
+async function createCapitalFixture(): Promise<CapitalFixture> {
+  const suffix = Math.random().toString(36).slice(2, 10);
+
+  const program = await db().query<{ id: string }>(
+    `INSERT INTO sto_programs(code, name, stage, status, target_instrument, professional_investor_only)
+     VALUES ($1, $2, 2, 'legal_review', 'equipment_right', true) RETURNING id`,
+    [`IT-STO-${suffix}`, `整合測試 STO 計畫 ${suffix}`],
+  );
+  const programId = program.rows[0]!.id;
+
+  const rule = await db().query<{ id: string }>(
+    `INSERT INTO social_mining_rules(program_id, version, content_quality_weight,
+       interaction_depth_weight, governance_weight, time_weight, per_account_cap, decay_pct,
+       reset_period_days, effective_from)
+     VALUES ($1, 1, 0.4, 0.25, 0.2, 0.15, 100, 0.05, 90, current_date) RETURNING id`,
+    [programId],
+  );
+  const ruleId = rule.rows[0]!.id;
+
+  const vehicle = await db().query<{ id: string }>(
+    `INSERT INTO rwa_vehicles(code, name, kind, status, maintenance_reserve_pct, senior_debt_twd,
+       distributable_basis, total_units)
+     VALUES ($1, $2, 'equipment_lease', 'legal_review', 0.05, 0, 'equipment_rent', 1000) RETURNING id`,
+    [`IT-RWA-${suffix}`, `整合測試 RWA 載體 ${suffix}`],
+  );
+  const vehicleId = vehicle.rows[0]!.id;
+
+  const makeHolder = async (wallet: string, addressClass: string, kyc: string, category: string): Promise<string> => {
+    const account = await db().query<{ id: string }>(
+      `INSERT INTO accounts(email, password_hash, role, display_name)
+       VALUES ($1, 'x', 'admin', $2) RETURNING id`,
+      [`it-${wallet}-${suffix}@example.test`, `整合測試 ${wallet}`],
+    );
+    const holder = await db().query<{ id: string }>(
+      `INSERT INTO token_holders(account_id, wallet_address, address_class, kyc_status,
+         kyc_verified_on, investor_category, jurisdiction)
+       VALUES ($1, $2, $3, $4, $5, $6, 'TW') RETURNING id`,
+      [account.rows[0]!.id, `${wallet}-${suffix}`, addressClass, kyc,
+        kyc === 'verified' ? '2026-01-01' : null, category],
+    );
+    return holder.rows[0]!.id;
+  };
+
+  return {
+    suffix,
+    programId,
+    ruleId,
+    vehicleId,
+    platformHolderId: await makeHolder('platform', 'platform', 'verified', 'general'),
+    marketHolderId: await makeHolder('market', 'secondary_market', 'verified', 'professional'),
+    custodyHolderId: await makeHolder('custody', 'custody', 'verified', 'professional'),
+    pendingHolderId: await makeHolder('pending', 'platform', 'pending', 'general'),
+    generalMarketHolderId: await makeHolder('generalmarket', 'secondary_market', 'verified', 'general'),
+  };
+}
+
+async function createLot(
+  fixture: CapitalFixture,
+  holderId: string,
+  acquisition: 'purchased' | 'earned',
+  quantity: number,
+  lockupUntil: string | null,
+): Promise<string> {
+  const lot = await db().query<{ id: string }>(
+    `INSERT INTO token_lots(holder_id, program_id, quantity, acquisition, consideration_twd,
+       lockup_until, lockup_basis, state, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'ST+','active') RETURNING id`,
+    [
+      holderId,
+      fixture.programId,
+      quantity,
+      acquisition,
+      acquisition === 'purchased' ? quantity * 1000 : 0,
+      lockupUntil,
+      acquisition === 'earned' ? 'earned_exempt' : 'rule_144',
+    ],
+  );
+  return lot.rows[0]!.id;
+}
+
+async function transition(lotId: string, toAddress: string): Promise<{
+  ok: boolean;
+  code: string;
+  from: string;
+  to: string | null;
+  requiresManualReview: boolean;
+}> {
+  const result = await db().query<{ result: { ok: boolean; code: string; from: string; to: string | null; requiresManualReview: boolean } }>(
+    `SELECT eg_transition_token_state($1,$2,'integration-test') AS result`,
+    [lotId, toAddress],
+  );
+  return result.rows[0]!.result;
+}
+
+async function walletOf(holderId: string): Promise<string> {
+  const row = await db().query<{ wallet_address: string }>('SELECT wallet_address FROM token_holders WHERE id = $1', [holderId]);
+  return row.rows[0]!.wallet_address;
+}
+
+describe.skipIf(!available)('資本市場交易保證', () => {
+  it('轉入合規二級市場觸發證券狀態，轉入託管地址則不變', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'purchased', 100, null);
+
+    const toMarket = await transition(lotId, await walletOf(fixture.marketHolderId));
+    expect(toMarket.ok).toBe(true);
+    expect(toMarket.code).toBe('UTILITY_TO_SECURITY');
+    expect(toMarket.to).toBe('ST');
+
+    const toCustody = await transition(lotId, await walletOf(fixture.custodyHolderId));
+    expect(toCustody.ok).toBe(true);
+    expect(toCustody.code).toBe('CUSTODY_HOLD');
+    expect(toCustody.to).toBe('ST');
+
+    const state = await db().query<{ state: string }>('SELECT state FROM token_lots WHERE id = $1', [lotId]);
+    expect(state.rows[0]!.state).toBe('ST');
+  });
+
+  it('鎖定期內不得把證券狀態轉回效用狀態', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'purchased', 100, '2099-12-31');
+
+    await transition(lotId, await walletOf(fixture.marketHolderId));
+    const back = await transition(lotId, await walletOf(fixture.platformHolderId));
+
+    expect(back.ok).toBe(false);
+    expect(back.code).toBe('LOCKUP_ACTIVE');
+    expect(back.requiresManualReview).toBe(true);
+
+    const state = await db().query<{ state: string }>('SELECT state FROM token_lots WHERE id = $1', [lotId]);
+    expect(state.rows[0]!.state).toBe('ST');
+  });
+
+  it('賺取取得無鎖定期，可自由轉回效用狀態', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'earned', 40, null);
+
+    await transition(lotId, await walletOf(fixture.marketHolderId));
+    const back = await transition(lotId, await walletOf(fixture.platformHolderId));
+
+    expect(back.ok).toBe(true);
+    expect(back.code).toBe('SECURITY_TO_UTILITY');
+    expect(back.to).toBe('ST+');
+  });
+
+  it('未完成 KYC 的地址不得收受代幣', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'earned', 10, null);
+
+    const result = await transition(lotId, await walletOf(fixture.pendingHolderId));
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('KYC_REQUIRED');
+  });
+
+  it('限專業投資人的計畫不得讓一般投資人進入證券狀態', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'earned', 10, null);
+
+    const result = await transition(lotId, await walletOf(fixture.generalMarketHolderId));
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('INVESTOR_NOT_ELIGIBLE');
+  });
+
+  it('安全模式啟動時一律阻擋並要求人工複核', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'earned', 10, null);
+
+    await db().query(
+      `INSERT INTO safe_mode_events(program_id, trigger, mode, authorized_by, multi_sig_count,
+         expires_at, announced_at)
+       VALUES ($1, 'oracle_error', 'pause_conversion', '["財務長","法務"]'::jsonb, 2,
+         now() + interval '1 day', now())`,
+      [fixture.programId],
+    );
+
+    const result = await transition(lotId, await walletOf(fixture.marketHolderId));
+    expect(result.ok).toBe(false);
+    expect(result.code).toBe('SAFE_MODE');
+    expect(result.requiresManualReview).toBe(true);
+  });
+
+  it('每次狀態轉換都留下可稽核紀錄', async () => {
+    const fixture = await createCapitalFixture();
+    const lotId = await createLot(fixture, fixture.platformHolderId, 'earned', 10, null);
+    await transition(lotId, await walletOf(fixture.marketHolderId));
+
+    const rows = await db().query<{ decision_code: string; legal_basis: string }>(
+      'SELECT decision_code, legal_basis FROM token_state_transitions WHERE lot_id = $1',
+      [lotId],
+    );
+    expect(rows.rowCount).toBe(1);
+    expect(rows.rows[0]!.decision_code).toBe('UTILITY_TO_SECURITY');
+    expect(rows.rows[0]!.legal_basis.length).toBeGreaterThan(0);
+
+    const audit = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_events
+        WHERE action = 'token.state_transition' AND entity_id = $1`,
+      [lotId],
+    );
+    expect(audit.rows[0]!.count).toBe('1');
+  });
+
+  it('Social Mining 依權重計算加權分數並建立賺取批次', async () => {
+    const fixture = await createCapitalFixture();
+
+    const result = await db().query<{ result: { ok: boolean; awarded: number; weightedScore: string; lotId: string } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 30,current_date - 1,$3::jsonb,60,'integration-test') AS result`,
+      [fixture.platformHolderId, fixture.ruleId, JSON.stringify({ contentQuality: 100, interactionDepth: 0, governance: 0, time: 0 })],
+    );
+
+    expect(result.rows[0]!.result.ok).toBe(true);
+    expect(result.rows[0]!.result.awarded).toBe(60);
+    expect(Number(result.rows[0]!.result.weightedScore)).toBeCloseTo(40, 4);
+
+    const lot = await db().query<{ acquisition: string; lockup_basis: string; state: string }>(
+      'SELECT acquisition, lockup_basis, state FROM token_lots WHERE id = $1',
+      [result.rows[0]!.result.lotId],
+    );
+    expect(lot.rows[0]!.acquisition).toBe('earned');
+    expect(lot.rows[0]!.lockup_basis).toBe('earned_exempt');
+    expect(lot.rows[0]!.state).toBe('ST+');
+  });
+
+  it('單一帳戶獎勵上限會截斷超額申請', async () => {
+    const fixture = await createCapitalFixture();
+    const scores = JSON.stringify({ contentQuality: 80, interactionDepth: 80, governance: 80, time: 80 });
+
+    const first = await db().query<{ result: { awarded: number; capped: boolean } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 60,current_date - 31,$3::jsonb,80,'integration-test') AS result`,
+      [fixture.platformHolderId, fixture.ruleId, scores],
+    );
+    expect(first.rows[0]!.result.awarded).toBe(80);
+    expect(first.rows[0]!.result.capped).toBe(false);
+
+    const second = await db().query<{ result: { awarded: number; capped: boolean } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 30,current_date - 1,$3::jsonb,80,'integration-test') AS result`,
+      [fixture.platformHolderId, fixture.ruleId, scores],
+    );
+    expect(second.rows[0]!.result.awarded).toBe(20);
+    expect(second.rows[0]!.result.capped).toBe(true);
+
+    const third = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 90,current_date - 61,$3::jsonb,10,'integration-test') AS result`,
+      [fixture.platformHolderId, fixture.ruleId, scores],
+    );
+    expect(third.rows[0]!.result.ok).toBe(false);
+    expect(third.rows[0]!.result.code).toBe('CAP_REACHED');
+  });
+
+  it('未完成 KYC 不得取得 Social Mining 獎勵', async () => {
+    const fixture = await createCapitalFixture();
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 30,current_date - 1,$3::jsonb,10,'integration-test') AS result`,
+      [fixture.pendingHolderId, fixture.ruleId, JSON.stringify({ contentQuality: 50, interactionDepth: 50, governance: 50, time: 50 })],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('KYC_REQUIRED');
+  });
+
+  it('分數超出範圍時拒絕發放', async () => {
+    const fixture = await createCapitalFixture();
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_award_social_mining($1,$2,current_date - 30,current_date - 1,$3::jsonb,10,'integration-test') AS result`,
+      [fixture.platformHolderId, fixture.ruleId, JSON.stringify({ contentQuality: 120, interactionDepth: 0, governance: 0, time: 0 })],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('SCORE_OUT_OF_RANGE');
+  });
+
+  it('RWA 分配只以設備租金為基礎，營運收入全數排除', async () => {
+    const fixture = await createCapitalFixture();
+
+    const result = await db().query<{ result: { ok: boolean; maintenanceReserve: number; distributable: number; perUnit: number; excludedOperatingRevenue: number } }>(
+      `SELECT eg_compute_rwa_distribution($1, current_date - 30, current_date - 1, 12000, 480000, 600, 'integration-test') AS result`,
+      [fixture.vehicleId],
+    );
+
+    const payload = result.rows[0]!.result;
+    expect(payload.ok).toBe(true);
+    expect(payload.maintenanceReserve).toBe(600);
+    expect(payload.distributable).toBe(10_800);
+    expect(payload.perUnit).toBe(10);
+    expect(payload.excludedOperatingRevenue).toBe(480_000);
+
+    const run = await db().query<{ operating_revenue_twd: number; distributable_twd: number }>(
+      'SELECT operating_revenue_twd, distributable_twd FROM rwa_distribution_runs WHERE vehicle_id = $1',
+      [fixture.vehicleId],
+    );
+    expect(run.rows[0]!.operating_revenue_twd).toBe(480_000);
+    expect(run.rows[0]!.distributable_twd).toBe(10_800);
+  });
+
+  it('同一期間重複試算不會產生重複分配紀錄', async () => {
+    const fixture = await createCapitalFixture();
+    const compute = (rent: number): Promise<unknown> =>
+      db().query(
+        `SELECT eg_compute_rwa_distribution($1, current_date - 30, current_date - 1, $2, 0, 0, 'integration-test')`,
+        [fixture.vehicleId, rent],
+      );
+
+    await compute(12_000);
+    await compute(24_000);
+
+    const runs = await db().query<{ count: string; distributable_twd: number }>(
+      `SELECT count(*)::text AS count, max(distributable_twd) AS distributable_twd
+         FROM rwa_distribution_runs WHERE vehicle_id = $1`,
+      [fixture.vehicleId],
+    );
+    expect(runs.rows[0]!.count).toBe('1');
+    expect(runs.rows[0]!.distributable_twd).toBe(22_800);
+  });
+});

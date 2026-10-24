@@ -498,6 +498,292 @@ try {
     }
   }
 
+
+  /* ---------------------------------------------------------------- */
+  /* 資本市場：RWA 資產護照、STO 三階段、STO+ 代幣                      */
+  /* ---------------------------------------------------------------- */
+
+  const assetSpecs = [
+    {
+      assetNo: 'EG-FRZ-0001', kind: 'equipment', invoice: 'INV-2026-0001', invoiceDate: day(-120),
+      value: 68000, lien: 0, lienHolder: null, eligible: true,
+    },
+    {
+      assetNo: 'EG-CHL-0001', kind: 'equipment', invoice: 'INV-2026-0002', invoiceDate: day(-120),
+      value: 52000, lien: 0, lienHolder: null, eligible: true,
+    },
+    {
+      assetNo: 'EG-HTR-0001', kind: 'equipment', invoice: 'INV-2026-0003', invoiceDate: day(-120),
+      value: 24000, lien: 0, lienHolder: null, eligible: true,
+    },
+    {
+      // 感測器缺發票與估值，示範「護照不完整即不得進入載體」。
+      assetNo: 'EG-SEN-0001', kind: 'equipment', invoice: null, invoiceDate: null,
+      value: null, lien: 0, lienHolder: null, eligible: false,
+    },
+  ] as const;
+
+  for (const spec of assetSpecs) {
+    const equipmentRow = await one<{ id: string; station_id: string; serial_no: string; owner: string; insurance_policy: string; insurance_expires_on: string }>(
+      `SELECT id, station_id, serial_no, owner, insurance_policy,
+              to_char(insurance_expires_on, 'YYYY-MM-DD') AS insurance_expires_on
+         FROM equipment WHERE asset_no = $1`,
+      [spec.assetNo],
+    );
+    const leaseRow = await one<{ id: string }>('SELECT id FROM leases WHERE equipment_id = $1', [equipmentRow.id]);
+
+    await client.query(
+      `INSERT INTO asset_passports(asset_no, equipment_id, kind, serial_no, invoice_no, invoice_date,
+         owner_legal_entity, location_station_id, maintenance_current, insurance_policy_no,
+         insurance_expires_on, appraised_value_twd, appraisal_date, appraiser, existing_lien_twd,
+         lien_holder, lease_id, rwa_eligible, eligibility_score, eligibility_blockers,
+         eligibility_warnings, evaluated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,true,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb,$20::jsonb,now())
+       ON CONFLICT (asset_no) DO UPDATE SET
+         invoice_no = EXCLUDED.invoice_no, appraised_value_twd = EXCLUDED.appraised_value_twd,
+         existing_lien_twd = EXCLUDED.existing_lien_twd, rwa_eligible = EXCLUDED.rwa_eligible,
+         eligibility_score = EXCLUDED.eligibility_score,
+         eligibility_blockers = EXCLUDED.eligibility_blockers,
+         eligibility_warnings = EXCLUDED.eligibility_warnings, evaluated_at = now()`,
+      [
+        spec.assetNo, equipmentRow.id, spec.kind, equipmentRow.serial_no, spec.invoice, spec.invoiceDate,
+        equipmentRow.owner, equipmentRow.station_id, equipmentRow.insurance_policy,
+        equipmentRow.insurance_expires_on, spec.value, spec.value === null ? null : day(-45),
+        spec.value === null ? null : '台灣公正資產鑑價', spec.lien, spec.lienHolder, leaseRow.id,
+        spec.eligible, spec.eligible ? 100 : 64,
+        JSON.stringify(spec.eligible ? [] : ['缺少發票或憑證', '缺少第三方估值']),
+        JSON.stringify([]),
+      ],
+    );
+
+    if (spec.value !== null) {
+      const passport = await one<{ id: string }>('SELECT id FROM asset_passports WHERE asset_no = $1', [spec.assetNo]);
+      await client.query(
+        `INSERT INTO asset_valuations(asset_id, valued_on, value_twd, method, appraiser, note)
+         SELECT $1, $2, $3, '成本法', '台灣公正資產鑑價', '購入成本扣除累計折舊'
+         WHERE NOT EXISTS (SELECT 1 FROM asset_valuations WHERE asset_id = $1 AND valued_on = $2)`,
+        [passport.id, day(-45), spec.value],
+      );
+    }
+  }
+
+  const vehicle = await one<{ id: string }>(
+    `INSERT INTO rwa_vehicles(code, name, kind, status, legal_counsel, securities_firm, collection_account,
+       maintenance_reserve_pct, senior_debt_twd, distributable_basis, disclosure_url, total_units, note)
+     VALUES ('RWA-EQ-001', '冷鏈設備租賃收益載體', 'equipment_lease', 'legal_review',
+       '尚未委任', '尚未委任', 'EG 資產管理信託專戶', 0.05, 0, 'equipment_rent', NULL, 1000,
+       '第一階段只納入可辨識冷鏈設備與真實設備租約；食品庫存不得作為公開投資標的。')
+     ON CONFLICT (code) DO UPDATE SET status = EXCLUDED.status, total_units = EXCLUDED.total_units
+     RETURNING id`,
+  );
+
+  for (const assetNo of ['EG-FRZ-0001', 'EG-CHL-0001', 'EG-HTR-0001']) {
+    const passport = await one<{ id: string; appraised_value_twd: number }>(
+      'SELECT id, appraised_value_twd FROM asset_passports WHERE asset_no = $1',
+      [assetNo],
+    );
+    await client.query(
+      `INSERT INTO rwa_vehicle_assets(vehicle_id, asset_id, allocated_twd)
+       VALUES ($1,$2,$3) ON CONFLICT (vehicle_id, asset_id) DO UPDATE SET allocated_twd = EXCLUDED.allocated_twd`,
+      [vehicle.id, passport.id, passport.appraised_value_twd],
+    );
+  }
+
+  // 三期設備租金分配。營運收入只記錄、不分配。
+  for (const period of [
+    { start: day(-90), end: day(-61), rent: 6000, revenue: 412000, fees: 200 },
+    { start: day(-60), end: day(-31), rent: 6000, revenue: 468000, fees: 200 },
+    { start: day(-30), end: day(-1), rent: 6000, revenue: 503000, fees: 200 },
+  ]) {
+    await client.query(
+      `SELECT eg_compute_rwa_distribution($1,$2,$3,$4,$5,$6,'seed-capital')`,
+      [vehicle.id, period.start, period.end, period.rent, period.revenue, period.fees],
+    );
+  }
+
+  for (const scenario of [
+    { key: 'station_closure', assumption: '站點歇業 3 個月，租金收入歸零', impact: 18000, recovery: 0, shortfall: 18000, atRisk: false },
+    { key: 'lessee_default', assumption: '承租人欠款 2 個月並加計違約金 10%', impact: 13200, recovery: 0, shortfall: 13200, atRisk: false },
+    { key: 'equipment_damage', assumption: '設備損壞，損失帳面 35%，保險理賠上限內', impact: 50400, recovery: 50400, shortfall: 0, atRisk: false },
+    { key: 'double_financing', assumption: '同一設備重複設定擔保，清償順位落後', impact: 144000, recovery: 144000, shortfall: 0, atRisk: false },
+    { key: 'insurance_denial', assumption: '保險拒賠，全額損失且無回收', impact: 144000, recovery: 0, shortfall: 144000, atRisk: true },
+    { key: 'residual_shortfall', assumption: '殘值僅剩帳面 30%，不足清償本金', impact: 144000, recovery: 43200, shortfall: 100800, atRisk: true },
+  ]) {
+    await client.query(
+      `INSERT INTO rwa_stress_scenarios(vehicle_id, scenario, assumption, impact_twd, recovery_twd,
+         shortfall_twd, principal_at_risk, evaluated_on)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,current_date)
+       ON CONFLICT (vehicle_id, scenario, evaluated_on) DO UPDATE SET
+         assumption = EXCLUDED.assumption, impact_twd = EXCLUDED.impact_twd,
+         recovery_twd = EXCLUDED.recovery_twd, shortfall_twd = EXCLUDED.shortfall_twd,
+         principal_at_risk = EXCLUDED.principal_at_risk`,
+      [vehicle.id, scenario.key, scenario.assumption, scenario.impact, scenario.recovery, scenario.shortfall, scenario.atRisk],
+    );
+  }
+
+  const program = await one<{ id: string }>(
+    `INSERT INTO sto_programs(code, name, stage, status, target_instrument, issuer_entity, tpex_regime,
+       professional_investor_only, issuance_cap_twd, disclosure_doc_url, counsel_opinion_url,
+       securities_firm, approved_on, note)
+     VALUES ('STO-EG-001', '冷鏈設備收益權證券型代幣', 2, 'legal_review', 'equipment_right',
+       'EG 資產管理股份有限公司（規劃中）', '櫃買中心證券商經營證券型代幣業務管理規則',
+       true, 3000000, NULL, NULL, '尚未委任', NULL,
+       '投資標的僅限設備相關權利，法律審閱前不得混入股權或債權。')
+     ON CONFLICT (code) DO UPDATE SET stage = EXCLUDED.stage, status = EXCLUDED.status
+     RETURNING id`,
+  );
+
+  for (const requirement of [
+    { stage: 1, key: 'founder_capital', label: '創辦人資本到位', category: '資本', status: 'done', blocking: true, evidence: '現金部位表已建立', owner: '財務長' },
+    { stage: 1, key: 'equity_structure', label: '適法股權結構', category: '資本', status: 'done', blocking: true, evidence: '股東名冊與章程', owner: '法務' },
+    { stage: 1, key: 'supplier_terms', label: '供應商付款條件', category: '營運', status: 'done', blocking: true, evidence: '採購合約', owner: '採購' },
+    { stage: 1, key: 'equipment_lease', label: '設備租賃合約', category: '營運', status: 'done', blocking: true, evidence: '4 份租約', owner: '資產管理' },
+    { stage: 2, key: 'audited_financials', label: '經會計師查核財報', category: '財務', status: 'in_progress', blocking: true, evidence: '查核進行中', owner: '財務長' },
+    { stage: 2, key: 'asset_inventory', label: '資產清冊與護照', category: '資產', status: 'done', blocking: true, evidence: '4 份護照，3 份合格', owner: '資產管理' },
+    { stage: 2, key: 'lease_review', label: '租約法律審閱', category: '法律', status: 'in_progress', blocking: true, evidence: '委任中', owner: '法務' },
+    { stage: 2, key: 'station_performance', label: '站點績效與風險資料', category: '營運', status: 'done', blocking: true, evidence: 'KPI 與擴點關卡', owner: '營運' },
+    { stage: 2, key: 'counsel_opinion', label: '台灣證券法律意見書', category: '法律', status: 'pending', blocking: true, evidence: null, owner: '法務' },
+    { stage: 2, key: 'securities_firm_assessment', label: '合格證券商評估', category: '法律', status: 'pending', blocking: true, evidence: null, owner: '資本市場' },
+    { stage: 3, key: 'issuance_approval', label: '發行核准', category: '監理', status: 'pending', blocking: true, evidence: null, owner: '資本市場' },
+    { stage: 3, key: 'investor_eligibility', label: '投資人適格審查', category: '監理', status: 'pending', blocking: true, evidence: null, owner: '法遵' },
+    { stage: 3, key: 'custody_arrangement', label: '保管與錢包安排', category: '營運', status: 'pending', blocking: true, evidence: null, owner: '資產管理' },
+    { stage: 3, key: 'distribution_mechanism', label: '分配機制與揭露', category: '營運', status: 'pending', blocking: true, evidence: null, owner: '財務長' },
+  ]) {
+    await client.query(
+      `INSERT INTO sto_requirements(program_id, stage, key, label, category, status, blocking, evidence, owner)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       ON CONFLICT (program_id, key) DO UPDATE SET status = EXCLUDED.status,
+         evidence = EXCLUDED.evidence, owner = EXCLUDED.owner, updated_at = now()`,
+      [program.id, requirement.stage, requirement.key, requirement.label, requirement.category,
+        requirement.status, requirement.blocking, requirement.evidence, requirement.owner],
+    );
+  }
+
+  for (const audit of [
+    { layer: 'code_security', auditor: '外部資安顧問', standard: 'OWASP ASVS L2', status: 'in_progress', findings: '待補錢包金鑰管理程序' },
+    { layer: 'legal', auditor: '台灣證券法律事務所', standard: '證交法與櫃買中心規則', status: 'pending', findings: null },
+    { layer: 'governance', auditor: '內部治理委員會', standard: '多簽與安全模式程序', status: 'passed', findings: '多簽門檻 2/3 已建立' },
+    { layer: 'regulatory', auditor: '法遵部', standard: '監理沙盒與專業投資人限制', status: 'pending', findings: null },
+  ]) {
+    await client.query(
+      `INSERT INTO compliance_audits(program_id, layer, auditor, standard, status, performed_on, findings)
+       SELECT $1,$2,$3,$4,$5,$6,$7
+       WHERE NOT EXISTS (SELECT 1 FROM compliance_audits WHERE program_id = $1 AND layer = $2)`,
+      [program.id, audit.layer, audit.auditor, audit.standard, audit.status,
+        audit.status === 'pending' ? null : day(-20), audit.findings],
+    );
+  }
+
+  await client.query(
+    `INSERT INTO safe_mode_events(program_id, trigger, mode, authorized_by, multi_sig_count,
+       expires_at, announced_at, resolved_at, resolution, note)
+     SELECT $1, 'oracle_error', 'pause_conversion', '["財務長","法務","技術長"]'::jsonb, 3,
+       now() - interval '10 days', now() - interval '12 days', now() - interval '11 days',
+       '預言機價格來源修正後恢復', '歷史事件，示範限期、多簽、公告與解除紀錄'
+     WHERE NOT EXISTS (SELECT 1 FROM safe_mode_events WHERE program_id = $1)`,
+    [program.id],
+  );
+
+  const holderSpecs = [
+    { email: 'admin@egroup.tw', wallet: 'eg-admin-custody', addressClass: 'custody', kyc: 'verified', category: 'professional' },
+    { email: 'admin@egroup.tw', wallet: 'eg-admin-market', addressClass: 'secondary_market', kyc: 'verified', category: 'professional' },
+    { email: 'customer@egroup.tw', wallet: 'eg-cust-0001', addressClass: 'platform', kyc: 'verified', category: 'general' },
+    { email: 'customer2@egroup.tw', wallet: 'eg-cust-0002', addressClass: 'platform', kyc: 'verified', category: 'general' },
+    { email: 'station@egroup.tw', wallet: 'eg-station-market', addressClass: 'secondary_market', kyc: 'verified', category: 'general' },
+    { email: 'supplier@egroup.tw', wallet: 'eg-supplier-pending', addressClass: 'platform', kyc: 'pending', category: 'general' },
+  ] as const;
+
+  for (const spec of holderSpecs) {
+    const account = await one<{ id: string }>('SELECT id FROM accounts WHERE email = $1', [spec.email]);
+    await client.query(
+      `INSERT INTO token_holders(account_id, wallet_address, address_class, kyc_status, kyc_verified_on,
+         investor_category, jurisdiction, sanctions_checked_on)
+       VALUES ($1,$2,$3,$4,$5,$6,'TW',$7)
+       ON CONFLICT (wallet_address) DO UPDATE SET address_class = EXCLUDED.address_class,
+         kyc_status = EXCLUDED.kyc_status, investor_category = EXCLUDED.investor_category`,
+      [account.id, spec.wallet, spec.addressClass, spec.kyc,
+        spec.kyc === 'verified' ? day(-60) : null, spec.category,
+        spec.kyc === 'verified' ? day(-30) : null],
+    );
+  }
+
+  // 購買取得：完整 Rule 144 鎖定期。
+  for (const lot of [
+    { wallet: 'eg-cust-0001', quantity: 100, consideration: 100000, lockup: day(180) },
+    { wallet: 'eg-cust-0002', quantity: 50, consideration: 50000, lockup: day(300) },
+    { wallet: 'eg-admin-custody', quantity: 200, consideration: 200000, lockup: day(90) },
+    { wallet: 'eg-station-market', quantity: 30, consideration: 30000, lockup: day(200) },
+  ]) {
+    const holder = await one<{ id: string; address_class: string }>(
+      'SELECT id, address_class FROM token_holders WHERE wallet_address = $1',
+      [lot.wallet],
+    );
+    await client.query(
+      `INSERT INTO token_lots(holder_id, program_id, quantity, acquisition, acquired_at, consideration_twd,
+         lockup_until, lockup_basis, state, status)
+       SELECT $1,$2,$3,'purchased',$4,$5,$6,'rule_144',$7,'active'
+       WHERE NOT EXISTS (
+         SELECT 1 FROM token_lots WHERE holder_id = $1 AND acquisition = 'purchased' AND quantity = $3)`,
+      [holder.id, program.id, lot.quantity, day(-70), lot.consideration, lot.lockup,
+        holder.address_class === 'secondary_market' ? 'ST' : 'ST+'],
+    );
+  }
+
+  const miningRule = await one<{ id: string }>(
+    `INSERT INTO social_mining_rules(program_id, version, content_quality_weight,
+       interaction_depth_weight, governance_weight, time_weight, per_account_cap, decay_pct,
+       reset_period_days, effective_from, note)
+     VALUES ($1, 1, 0.4, 0.25, 0.2, 0.15, 500, 0.05, 90, $2,
+       '論文所載 Knowpia 規格：內容品質 40%、互動深度 25%、治理參與 20%、時間 15%。')
+     ON CONFLICT (program_id, version) DO UPDATE SET per_account_cap = EXCLUDED.per_account_cap
+     RETURNING id`,
+    [program.id, day(-90)],
+  );
+
+  // 賺取取得：勞務對價，豁免鎖定期，但仍受 KYC 與單一帳戶上限約束。
+  for (const award of [
+    { wallet: 'eg-cust-0001', scores: { contentQuality: 88, interactionDepth: 72, governance: 65, time: 90, contributionType: 'content' }, requested: 120 },
+    { wallet: 'eg-cust-0002', scores: { contentQuality: 70, interactionDepth: 60, governance: 80, time: 55, contributionType: 'curation' }, requested: 100 },
+    { wallet: 'eg-admin-custody', scores: { contentQuality: 95, interactionDepth: 88, governance: 92, time: 85, contributionType: 'governance' }, requested: 90 },
+    { wallet: 'eg-station-market', scores: { contentQuality: 60, interactionDepth: 50, governance: 40, time: 70, contributionType: 'technical' }, requested: 30 },
+    { wallet: 'eg-supplier-pending', scores: { contentQuality: 80, interactionDepth: 80, governance: 80, time: 80, contributionType: 'content' }, requested: 50 },
+  ]) {
+    const holder = await one<{ id: string }>('SELECT id FROM token_holders WHERE wallet_address = $1', [award.wallet]);
+    await client.query(
+      `SELECT eg_award_social_mining($1,$2,$3,$4,$5::jsonb,$6,'seed-capital')`,
+      [holder.id, miningRule.id, day(-30), day(-1), JSON.stringify(award.scores), award.requested],
+    );
+  }
+
+  // 狀態轉換：由接收地址性質自動判斷，並示範鎖定期規避防線。
+  const purchasedLot = await one<{ id: string }>(
+    `SELECT l.id FROM token_lots l JOIN token_holders h ON h.id = l.holder_id
+      WHERE h.wallet_address = 'eg-cust-0001' AND l.acquisition = 'purchased' LIMIT 1`,
+  );
+  const earnedLot = await one<{ id: string }>(
+    `SELECT l.id FROM token_lots l JOIN token_holders h ON h.id = l.holder_id
+      WHERE h.wallet_address = 'eg-cust-0002' AND l.acquisition = 'earned' LIMIT 1`,
+  );
+
+  if (purchasedLot !== undefined && earnedLot !== undefined) {
+    const already = await one<{ count: string }>(
+      `SELECT count(*)::text AS count FROM token_state_transitions WHERE actor = 'seed-capital'`,
+    );
+    if (already.count === '0') {
+      for (const step of [
+        { lot: purchasedLot.id, to: 'eg-admin-market' },
+        { lot: purchasedLot.id, to: 'eg-admin-custody' },
+        { lot: purchasedLot.id, to: 'eg-cust-0001' },
+        { lot: purchasedLot.id, to: 'eg-station-market' },
+        { lot: purchasedLot.id, to: 'eg-supplier-pending' },
+        { lot: earnedLot.id, to: 'eg-admin-market' },
+        { lot: earnedLot.id, to: 'eg-cust-0002' },
+      ]) {
+        await client.query(`SELECT eg_transition_token_state($1,$2,'seed-capital')`, [step.lot, step.to]);
+      }
+    }
+  }
+
   const freezer = await one<{ id: string }>('SELECT id FROM equipment WHERE asset_no = $1', ['EG-FRZ-0001']);
   for (const event of [
     { temp: 3.1, status: 'ok', action: '正常，無需處理' },

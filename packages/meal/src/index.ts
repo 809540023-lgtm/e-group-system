@@ -10,3 +10,4 @@ export * from './forecast.ts';
 export * from './orders.ts';
 export * from './settlement.ts';
 export * from './ai.ts';
+export * from './capital.ts';
