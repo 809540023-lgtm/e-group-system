@@ -1056,6 +1056,306 @@ try {
     }
   }
 
+  // 區塊鏈基礎設施：資產本質、活動本質與技術中性（論文三）
+  {
+    const tokens = [
+      {
+        symbol: 'EG-RWA-EQ', name: '冷鏈設備收益權代幣', cls: 'physical_asset',
+        tangible: true, service: false, financial: false, indispensable: false, pegged: false, resale: false,
+        risk: 'low', howeyNeeded: false,
+        howey: [false, false, false, false],
+        analogy: '倉單、提單、所有權狀', regulator: '財產法；視資產類型適用商品法或不動產法',
+        note: '對應 RWA-EQ-001 載體；法律效果取決於所代表的冷鏈設備，而非帳本形式。',
+      },
+      {
+        symbol: 'EG-STO-001', name: '冷鏈設備收益權證券型代幣', cls: 'intangible_asset',
+        tangible: false, service: false, financial: true, indispensable: false, pegged: false, resale: true,
+        risk: 'high', howeyNeeded: true,
+        howey: [true, true, true, true],
+        analogy: '收益權憑證', regulator: '證券法',
+        note: '對應 STO-EG-001；Howey 四要件齊備，須受證券法全面監管。',
+      },
+      {
+        symbol: 'EG-STO-002', name: '單站冷鏈設備收益權試點代幣', cls: 'intangible_asset',
+        tangible: false, service: false, financial: true, indispensable: false, pegged: false, resale: true,
+        risk: 'high', howeyNeeded: true,
+        howey: [true, true, true, true],
+        analogy: '收益權憑證', regulator: '證券法',
+        note: '對應 STO-EG-002；限專業投資人，上限 600,000。',
+      },
+      {
+        symbol: 'EG-MEAL', name: '餐食兌換代幣', cls: 'services',
+        tangible: false, service: true, financial: false, indispensable: false, pegged: false, resale: false,
+        risk: 'low', howeyNeeded: false,
+        howey: [false, false, false, false],
+        analogy: '禮券、預付卡、服務合約', regulator: '消費者保護法與契約法',
+        note: '僅代表餐食請求權，不得與配息型證券型代幣綁定。',
+      },
+      {
+        symbol: 'AVAX', name: 'Avalanche 原生代幣', cls: 'native_dlt',
+        tangible: false, service: false, financial: false, indispensable: true, pegged: false, resale: false,
+        risk: 'low', howeyNeeded: true,
+        howey: [false, false, false, false],
+        analogy: '無直接類比；數位原生資產', regulator: '須建立新類別（協議代幣監管框架）',
+        note: '充分去中心化後不存在單一發行人的管理或創業努力，「他人努力」要件不成立。',
+      },
+      {
+        symbol: 'EG-TWD', name: '覆蓋性支付穩定幣', cls: 'stablecoin',
+        tangible: false, service: false, financial: false, indispensable: false, pegged: true, resale: false,
+        risk: 'low', howeyNeeded: false,
+        howey: [false, false, false, false],
+        analogy: '電子支付工具', regulator: '支付法規',
+        note: '設計用於對新台幣維持穩定價值，屬支付工具性質。',
+      },
+    ];
+
+    for (const token of tokens) {
+      await client.query(
+        `INSERT INTO token_classifications (
+           symbol, name, token_class, represents_tangible, represents_service, represents_financial,
+           indispensable, pegged_to_reference, resale_profit_primary, securities_risk, howey_needed,
+           howey_money_investment, howey_common_enterprise, howey_profit_expectation, howey_efforts_of_others,
+           legal_analogy, regulator, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+         ON CONFLICT (symbol) DO NOTHING`,
+        [
+          token.symbol, token.name, token.cls, token.tangible, token.service, token.financial,
+          token.indispensable, token.pegged, token.resale, token.risk, token.howeyNeeded,
+          token.howey[0], token.howey[1], token.howey[2], token.howey[3],
+          token.analogy, token.regulator, token.note,
+        ],
+      );
+    }
+
+    const snapshots = [
+      {
+        chain: 'Ethereum', nakamoto: 4, gini: 0.81, countries: 39, top5: 0.62,
+        staking: 0.28, usage: 0.0051, single: false, gov: 0.42,
+        band: 'centralized', efforts: true,
+        source: 'Messari (2024)；Etherscan (2025)；Ethernodes (2025)',
+        note: 'Nakamoto 係數僅 4、Gini 0.81，依本框架判為集中；顯示框架不為既有敘事背書。',
+      },
+      {
+        chain: 'Solana', nakamoto: 21, gini: 0.65, countries: 47, top5: 0.51,
+        staking: 0.67, usage: 0.0142, single: false, gov: 0.38,
+        band: 'diffuse', efforts: false,
+        source: 'Messari (2024)；Solana Compass (2025)；Coin Metrics (2025)',
+        note: 'Nakamoto 21、Gini 0.65、47 國，判為充分分散。',
+      },
+      {
+        chain: 'Avalanche', nakamoto: 28, gini: 0.51, countries: 47, top5: 0.51,
+        staking: 0.56, usage: 0.0084, single: false, gov: 0.35,
+        band: 'diffuse', efforts: false,
+        source: 'Messari (2024)；Avalanche Foundation (2025)；Coin Metrics (2025)',
+        note: 'Nakamoto 28、Gini 0.51，三鏈中最分散。',
+      },
+      {
+        chain: 'EG-Chain（自建聯盟鏈）', nakamoto: 2, gini: 0.92, countries: 1, top5: 1.0,
+        staking: 0.0, usage: 0.0002, single: true, gov: 0.88,
+        band: 'centralized', efforts: true,
+        source: '內部量測',
+        note: '單一實體可變更協議規則，去中心化程度不足，不得主張基礎設施豁免。',
+      },
+    ];
+
+    for (const snap of snapshots) {
+      await client.query(
+        `INSERT INTO decentralization_snapshots (
+           chain, measured_on, nakamoto_coefficient, gini, country_count, top5_country_share,
+           staking_ratio, usage_density, single_entity_control, governance_concentration,
+           band, efforts_of_others, source, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+         ON CONFLICT (chain, measured_on) DO NOTHING`,
+        [
+          snap.chain, day(-30), snap.nakamoto, snap.gini, snap.countries, snap.top5,
+          snap.staking, snap.usage, snap.single, snap.gov, snap.band, snap.efforts, snap.source, snap.note,
+        ],
+      );
+    }
+
+    const precedents = [
+      { ref: 'Venture Capital Network', date: '1984-05-07', cat: 'adviser', subject: '配對服務', principle: '連結投資人與創業者、非營利、無結果基礎報酬，不構成投資顧問。' },
+      { ref: 'Instinet', date: '1989-01-01', cat: 'broker', subject: '電子交易系統', principle: '新技術不自動觸發新監管；郵件、電話、電傳從未被主張管轄權。' },
+      { ref: 'Technology Capital Network', date: '1992-06-05', cat: 'adviser', subject: '配對服務', principle: '不參與交易決策、不提供個人化建議，即使促進投資活動亦不構成投資顧問。' },
+      { ref: 'EJV Partners, L.P.', date: '1992-12-07', cat: 'adviser', subject: '被動資訊平臺', principle: '出版者例外：僅提供研究報告訪問，不針對特定客戶提供個人化建議。' },
+      { ref: 'Real Goods Trading Corp.', date: '1996-06-24', cat: 'broker', subject: '股東服務平臺', principle: '協助股東間直接交易、無中介角色、無報酬、無參與談判。' },
+      { ref: 'Charles Schwab', date: '1996-11-27', cat: 'broker', subject: '數據與資訊服務', principle: '僅提供資訊不構成經紀商，即使資訊可能間接影響交易決策。' },
+      { ref: 'Evare, LLC', date: '1998-11-30', cat: 'broker', subject: '電子通訊平臺', principle: '扮演被動角色、系統對交易實現嚴格中立、收取固定或使用量基礎費用。' },
+      { ref: 'Portland Brewing Co.', date: '1999-12-14', cat: 'broker', subject: '股東服務平臺', principle: '發行人設立以促進股票流動性，不參與交易決策、不收取交易基礎報酬。' },
+      { ref: 'Broker-to-Broker Networks', date: '2000-12-01', cat: 'broker', subject: '電子通訊平臺', principle: '僅傳遞訊息、不參與交易執行、無交易裁量權、無客戶資產接觸。' },
+    ];
+
+    for (const item of precedents) {
+      await client.query(
+        `INSERT INTO no_action_precedents (reference, decided_on, category, subject, principle, source)
+         VALUES ($1,$2,$3,$4,$5,'SEC No-Action Letter')
+         ON CONFLICT (reference) DO NOTHING`,
+        [item.ref, item.date, item.cat, item.subject, item.principle],
+      );
+    }
+
+    const already = await one<{ count: string }>(
+      `SELECT count(*)::text AS count FROM activity_substance_assessments WHERE subject LIKE 'EG %'`,
+    );
+    if (already.count === '0') {
+      const assessments = [
+        {
+          subject: 'EG 驗證節點', role: 'validator',
+          factors: { passiveTechnicalFunction: true, fixedOrUsageFee: true, compensationKind: 'fixed' },
+        },
+        {
+          subject: 'EG 節點營運商', role: 'node_operator',
+          factors: { passiveTechnicalFunction: true, fixedOrUsageFee: true, compensationKind: 'usage' },
+        },
+        {
+          subject: 'EG 自託管錢包', role: 'wallet_developer',
+          factors: { passiveTechnicalFunction: true, fixedOrUsageFee: true, compensationKind: 'fixed' },
+        },
+        {
+          subject: 'EG 智能合約部署工具', role: 'smart_contract_developer',
+          factors: { passiveTechnicalFunction: true, fixedOrUsageFee: true, publisherException: true, compensationKind: 'fixed' },
+        },
+        {
+          subject: 'EG 站點導流服務', role: 'node_operator',
+          factors: { passiveTechnicalFunction: true, compensationKind: 'transaction' },
+        },
+        {
+          subject: 'EG 站點代收付服務', role: 'broker',
+          factors: {
+            regularBusinessForOthers: true, transactionBasedCompensation: true,
+            actsAsMiddleman: true, custodyClientAssets: true, compensationKind: 'transaction',
+          },
+        },
+        {
+          subject: 'EG 收益分配模組', role: 'investment_adviser',
+          factors: { personalizedAdvice: true, transactionBasedCompensation: true, compensationKind: 'transaction' },
+        },
+      ];
+
+      for (const item of assessments) {
+        await client.query(`SELECT eg_assess_activity_substance($1,$2,$3::jsonb,'seed-infrastructure')`, [
+          item.subject, item.role, JSON.stringify(item.factors),
+        ]);
+      }
+    }
+
+    const functions = [
+      { symbol: 'AVAX', fn: 'staking', intrinsic: true, necessary: true, capital: false, common: false, profit: false, issuer: false, consumptive: true, custodial: false, nonSecurity: true, blockers: [] },
+      { symbol: 'AVAX', fn: 'validation', intrinsic: true, necessary: true, capital: false, common: false, profit: false, issuer: false, consumptive: true, custodial: false, nonSecurity: true, blockers: [] },
+      { symbol: 'AVAX', fn: 'gas_payment', intrinsic: true, necessary: true, capital: false, common: false, profit: false, issuer: false, consumptive: true, custodial: false, nonSecurity: true, blockers: [] },
+      { symbol: 'AVAX', fn: 'onchain_transfer', intrinsic: true, necessary: true, capital: false, common: false, profit: false, issuer: false, consumptive: true, custodial: false, nonSecurity: true, blockers: [] },
+      { symbol: 'AVAX', fn: 'reward_distribution', intrinsic: true, necessary: true, capital: true, common: true, profit: true, issuer: true, consumptive: false, custodial: true, nonSecurity: false, blockers: ['委託第三方質押服務商，存在委託關係，可能構成投資契約。', '存在可識別的發行人關係，須回到資產本質審查。'] },
+    ];
+
+    for (const item of functions) {
+      await client.query(
+        `INSERT INTO technology_function_assessments (
+           token_symbol, function, intrinsic_to_protocol, necessary_for_operation, capital_contribution,
+           common_enterprise, profit_expectation, issuer_relationship, consumptive_use, custodial_staking,
+           non_security, blockers, assessed_on, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb,$13,$14)
+         ON CONFLICT (token_symbol, function, assessed_on) DO NOTHING`,
+        [
+          item.symbol, item.fn, item.intrinsic, item.necessary, item.capital,
+          item.common, item.profit, item.issuer, item.consumptive, item.custodial,
+          item.nonSecurity, JSON.stringify(item.blockers), day(-30),
+          item.nonSecurity
+            ? '技術功能為協議運作所必要，且無發行人關係與利潤期待，不構成證券交易。'
+            : '託管質押與發行人關係使 Howey 四要件齊備，技術功能外觀不能排除投資契約定性。',
+        ],
+      );
+    }
+
+    const stages = [
+      {
+        symbol: 'AVAX', stage: 'functional', programmed: true, deployed: true, core: true, single: false,
+        ptUsed: false, cap: null, offering: null,
+        note: '充分去中心化，不存在單一發行人的管理努力，屬功能階段。',
+      },
+      {
+        symbol: 'EG-PT-001', stage: 'pre_functionality', programmed: false, deployed: false, core: false, single: true,
+        ptUsed: true, cap: 50_000_000, offering: 12_000_000,
+        note: 'EG 節點協議代幣；協議仍在開發，代幣僅代表對未來功能的期待，可反駁推定為投資契約。',
+      },
+    ];
+
+    for (const item of stages) {
+      await client.query(
+        `INSERT INTO protocol_token_stages (
+           token_symbol, stage, programmed_as_indispensable, deployed_for_actual_use,
+           core_features_complete, single_issuer_efforts, regulation_pt_used,
+           regulation_pt_cap_usd, regulation_pt_offering_usd, transitioned_at, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+         ON CONFLICT (token_symbol) DO NOTHING`,
+        [
+          item.symbol, item.stage, item.programmed, item.deployed, item.core, item.single,
+          item.ptUsed, item.cap, item.offering,
+          item.stage === 'functional' ? new Date().toISOString() : null, item.note,
+        ],
+      );
+    }
+
+    const transitions = await one<{ count: string }>(
+      `SELECT count(*)::text AS count FROM protocol_token_transitions WHERE actor_id = 'seed-infrastructure'`,
+    );
+    if (transitions.count === '0') {
+      for (const step of [
+        { symbol: 'EG-PT-999', programmed: true, deployed: true, core: true, single: false },
+        { symbol: 'AVAX', programmed: true, deployed: true, core: true, single: false },
+        { symbol: 'EG-PT-001', programmed: true, deployed: false, core: false, single: true },
+        { symbol: 'EG-PT-001', programmed: true, deployed: true, core: true, single: false },
+        { symbol: 'EG-PT-001', programmed: true, deployed: true, core: true, single: false },
+        { symbol: 'EG-PT-001', programmed: true, deployed: false, core: true, single: false },
+      ]) {
+        await client.query(
+          `SELECT eg_advance_protocol_token_stage($1,$2,$3,$4,$5,'seed-infrastructure')`,
+          [step.symbol, step.programmed, step.deployed, step.core, step.single],
+        );
+      }
+    }
+
+    const daos = [
+      { name: 'EG 節點治理 DAO（未登記）', form: 'none', transparent: false, limited: false, standards: false, presumption: true, harbor: false, registered: null, note: '未採任何州法法人形式，依 Sarcuni v. bZx DAO 推定為普通合夥，成員負連帶責任。' },
+      { name: 'EG 節點治理 DAO LLC', form: 'wyoming_dao_llc', transparent: true, limited: true, standards: true, presumption: false, harbor: true, registered: day(-200), note: '依 Wyo. Stat. § 17-31-101 et seq. 登記，成員有限責任。' },
+      { name: 'EG 公益節點 DUNA', form: 'duna', transparent: true, limited: true, standards: true, presumption: false, harbor: true, registered: day(-120), note: '依 2024 年 DUNA 取得獨立法人地位，非營利目的。' },
+      { name: 'EG 測試 DAO', form: 'tennessee_dao', transparent: true, limited: true, standards: false, presumption: false, harbor: false, registered: day(-60), note: '已登記但未滿足最低治理標準，安全港不成立。' },
+    ];
+
+    for (const item of daos) {
+      await client.query(
+        `INSERT INTO dao_registrations (
+           name, entity_form, governance_transparent, member_limited_liability,
+           minimum_governance_standards, general_partnership_presumption, safe_harbor,
+           control_holder_threshold, registered_on, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7,0.05,$8,$9)
+         ON CONFLICT (name) DO NOTHING`,
+        [
+          item.name, item.form, item.transparent, item.limited, item.standards,
+          item.presumption, item.harbor, item.registered, item.note,
+        ],
+      );
+    }
+
+    const tiers = [
+      { symbol: 'AVAX', tier: 'framework_alignment', satisfied: false, requirement: '美國 CLARITY Act 與歐盟 MiCA 完成協議代幣對應條款之雙邊互認。', reference: 'GDPR Privacy Shield 經驗', note: 'CLARITY Act 尚未成法，框架對接無從完成。' },
+      { symbol: 'AVAX', tier: 'tiered_reporting', satisfied: true, requirement: '協議白皮書、智能合約稽核報告、核心開發團隊揭露。', reference: 'ESMA 與 SEC 雙邊申報', note: '三項最低限度揭露均已完成。' },
+      { symbol: 'AVAX', tier: 'real_time_sharing', satisfied: false, requirement: '重大協議事件 24 小時內雙邊通報。', reference: 'IOSCO (2023)', note: '尚未建立專用資訊共享平台。' },
+      { symbol: 'EG-PT-001', tier: 'framework_alignment', satisfied: false, requirement: '美國 CLARITY Act 與歐盟 MiCA 完成協議代幣對應條款之雙邊互認。', reference: 'GDPR Privacy Shield 經驗', note: '尚未啟動。' },
+      { symbol: 'EG-PT-001', tier: 'tiered_reporting', satisfied: false, requirement: '協議白皮書、智能合約稽核報告、核心開發團隊揭露。', reference: 'ESMA 與 SEC 雙邊申報', note: '稽核報告尚未完成。' },
+      { symbol: 'EG-PT-001', tier: 'real_time_sharing', satisfied: false, requirement: '重大協議事件 24 小時內雙邊通報。', reference: 'IOSCO (2023)', note: '尚未建立。' },
+    ];
+
+    for (const item of tiers) {
+      await client.query(
+        `INSERT INTO cross_border_tier_assessments (
+           token_symbol, tier, satisfied, requirement, reference, assessed_on, note
+         ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (token_symbol, tier, assessed_on) DO NOTHING`,
+        [item.symbol, item.tier, item.satisfied, item.requirement, item.reference, day(-30), item.note],
+      );
+    }
+  }
+
   const freezer = await one<{ id: string }>('SELECT id FROM equipment WHERE asset_no = $1', ['EG-FRZ-0001']);
   for (const event of [
     { temp: 3.1, status: 'ok', action: '正常，無需處理' },

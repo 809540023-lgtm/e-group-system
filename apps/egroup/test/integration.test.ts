@@ -833,6 +833,185 @@ describe.skipIf(!available)('監理環境交易保證', () => {
   });
 });
 
+describe.skipIf(!available)('區塊鏈基礎設施交易保證', () => {
+  let counter = 0;
+  function uniqueSuffix(): string {
+    counter += 1;
+    return `${Date.now()}-${counter}`;
+  }
+
+  async function createTokenStage(symbol: string, stage: 'pre_functionality' | 'functional'): Promise<void> {
+    await db().query(
+      `INSERT INTO protocol_token_stages (token_symbol, stage) VALUES ($1, $2)`,
+      [symbol, stage],
+    );
+  }
+
+  it('純技術角色且報酬為固定或使用量基礎時，判為基礎設施豁免', async () => {
+    const result = await db().query<{ result: { ok: boolean; code: string; exempt: boolean } }>(
+      `SELECT eg_assess_activity_substance('IT 驗證節點', 'validator', $1::jsonb, 'integration-test') AS result`,
+      [JSON.stringify({ passiveTechnicalFunction: true, fixedOrUsageFee: true, compensationKind: 'usage' })],
+    );
+    expect(result.rows[0]!.result.ok).toBe(true);
+    expect(result.rows[0]!.result.code).toBe('INFRASTRUCTURE_EXEMPT');
+    expect(result.rows[0]!.result.exempt).toBe(true);
+  });
+
+  it('出現交易基礎報酬時不得豁免，須接受中介審查', async () => {
+    const result = await db().query<{ result: { ok: boolean; code: string; exempt: boolean } }>(
+      `SELECT eg_assess_activity_substance('IT 站點導流', 'broker', $1::jsonb, 'integration-test') AS result`,
+      [JSON.stringify({ transactionBasedCompensation: true, compensationKind: 'transaction' })],
+    );
+    expect(result.rows[0]!.result.ok).toBe(true);
+    expect(result.rows[0]!.result.code).toBe('INTERMEDIARY_REVIEW');
+    expect(result.rows[0]!.result.exempt).toBe(false);
+  });
+
+  it('即使無核心因素，報酬為交易基礎時仍不得豁免', async () => {
+    const result = await db().query<{ result: { code: string; exempt: boolean } }>(
+      `SELECT eg_assess_activity_substance('IT 純技術但抽成', 'node_operator', $1::jsonb, 'integration-test') AS result`,
+      [JSON.stringify({ passiveTechnicalFunction: true, compensationKind: 'transaction' })],
+    );
+    expect(result.rows[0]!.result.code).toBe('INTERMEDIARY_REVIEW');
+    expect(result.rows[0]!.result.exempt).toBe(false);
+  });
+
+  it('缺少主體或角色時直接拒絕，且不寫入評估紀錄', async () => {
+    const before = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM activity_substance_assessments`,
+    );
+    const noSubject = await db().query<{ result: { code: string } }>(
+      `SELECT eg_assess_activity_substance('', 'validator', '{}'::jsonb, 'integration-test') AS result`,
+    );
+    expect(noSubject.rows[0]!.result.code).toBe('SUBJECT_REQUIRED');
+    const noRole = await db().query<{ result: { code: string } }>(
+      `SELECT eg_assess_activity_substance('IT 主體', '', '{}'::jsonb, 'integration-test') AS result`,
+    );
+    expect(noRole.rows[0]!.result.code).toBe('ROLE_REQUIRED');
+    const after = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM activity_substance_assessments`,
+    );
+    expect(after.rows[0]!.count).toBe(before.rows[0]!.count);
+  });
+
+  it('非法報酬結構被拒絕', async () => {
+    const result = await db().query<{ result: { code: string } }>(
+      `SELECT eg_assess_activity_substance('IT 主體', 'validator', $1::jsonb, 'integration-test') AS result`,
+      [JSON.stringify({ compensationKind: 'equity' })],
+    );
+    expect(result.rows[0]!.result.code).toBe('INVALID_COMPENSATION');
+  });
+
+  it('每次活動本質評估都寫入稽核軌跡', async () => {
+    const subject = `IT 稽核留痕 ${uniqueSuffix()}`;
+    await db().query(
+      `SELECT eg_assess_activity_substance($1, 'validator', $2::jsonb, 'integration-test')`,
+      [subject, JSON.stringify({ passiveTechnicalFunction: true, compensationKind: 'fixed' })],
+    );
+    const audit = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_events
+        WHERE action = 'infrastructure.activity_substance' AND after_json->>'subject' = $1`,
+      [subject],
+    );
+    expect(audit.rows[0]!.count).toBe('1');
+  });
+
+  it('三項條件未同時成立時停留在功能前階段', async () => {
+    const symbol = `IT-PT-${uniqueSuffix()}`;
+    await createTokenStage(symbol, 'pre_functionality');
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_advance_protocol_token_stage($1, true, true, false, true, 'integration-test') AS result`,
+      [symbol],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('REMAINS_PRE_FUNCTIONALITY');
+  });
+
+  it('三項條件同時成立時推進至功能階段', async () => {
+    const symbol = `IT-PT-${uniqueSuffix()}`;
+    await createTokenStage(symbol, 'pre_functionality');
+    const result = await db().query<{ result: { ok: boolean; code: string; toStage: string } }>(
+      `SELECT eg_advance_protocol_token_stage($1, true, true, true, true, 'integration-test') AS result`,
+      [symbol],
+    );
+    expect(result.rows[0]!.result.ok).toBe(true);
+    expect(result.rows[0]!.result.code).toBe('ADVANCED_TO_FUNCTIONAL');
+    expect(result.rows[0]!.result.toStage).toBe('functional');
+
+    const row = await db().query<{ stage: string; transitioned_at: Date | null }>(
+      'SELECT stage, transitioned_at FROM protocol_token_stages WHERE token_symbol = $1',
+      [symbol],
+    );
+    expect(row.rows[0]!.stage).toBe('functional');
+    expect(row.rows[0]!.transitioned_at).not.toBeNull();
+  });
+
+  it('已處於功能階段時重複推進回報 ALREADY_FUNCTIONAL', async () => {
+    const symbol = `IT-PT-${uniqueSuffix()}`;
+    await createTokenStage(symbol, 'functional');
+    const result = await db().query<{ result: { code: string } }>(
+      `SELECT eg_advance_protocol_token_stage($1, true, true, true, true, 'integration-test') AS result`,
+      [symbol],
+    );
+    expect(result.rows[0]!.result.code).toBe('ALREADY_FUNCTIONAL');
+  });
+
+  it('功能階段不得因單一條件變動自動倒退', async () => {
+    const symbol = `IT-PT-${uniqueSuffix()}`;
+    await createTokenStage(symbol, 'functional');
+    const result = await db().query<{ result: { ok: boolean; code: string } }>(
+      `SELECT eg_advance_protocol_token_stage($1, true, false, true, true, 'integration-test') AS result`,
+      [symbol],
+    );
+    expect(result.rows[0]!.result.ok).toBe(false);
+    expect(result.rows[0]!.result.code).toBe('STAGE_REGRESSION_BLOCKED');
+
+    const row = await db().query<{ stage: string }>(
+      'SELECT stage FROM protocol_token_stages WHERE token_symbol = $1',
+      [symbol],
+    );
+    expect(row.rows[0]!.stage).toBe('functional');
+  });
+
+  it('未登錄的協議代幣不得推進，且不寫入轉換紀錄', async () => {
+    const symbol = `IT-MISSING-${uniqueSuffix()}`;
+    const result = await db().query<{ result: { code: string } }>(
+      `SELECT eg_advance_protocol_token_stage($1, true, true, true, true, 'integration-test') AS result`,
+      [symbol],
+    );
+    expect(result.rows[0]!.result.code).toBe('TOKEN_NOT_FOUND');
+    const rows = await db().query<{ count: string }>(
+      'SELECT count(*)::text AS count FROM protocol_token_transitions WHERE token_symbol = $1',
+      [symbol],
+    );
+    expect(rows.rows[0]!.count).toBe('0');
+  });
+
+  it('被阻擋的階段推進同樣留下轉換紀錄與稽核軌跡', async () => {
+    const symbol = `IT-PT-${uniqueSuffix()}`;
+    await createTokenStage(symbol, 'functional');
+    await db().query(
+      `SELECT eg_advance_protocol_token_stage($1, false, false, false, true, 'integration-test')`,
+      [symbol],
+    );
+    const transitions = await db().query<{ decision_code: string; from_stage: string; to_stage: string }>(
+      'SELECT decision_code, from_stage, to_stage FROM protocol_token_transitions WHERE token_symbol = $1',
+      [symbol],
+    );
+    expect(transitions.rowCount).toBe(1);
+    expect(transitions.rows[0]!.decision_code).toBe('STAGE_REGRESSION_BLOCKED');
+    expect(transitions.rows[0]!.from_stage).toBe('functional');
+    expect(transitions.rows[0]!.to_stage).toBe('pre_functionality');
+
+    const audit = await db().query<{ count: string }>(
+      `SELECT count(*)::text AS count FROM audit_events
+        WHERE action = 'infrastructure.protocol_token_stage' AND entity_id = $1`,
+      [symbol],
+    );
+    expect(audit.rows[0]!.count).toBe('1');
+  });
+});
+
 function productInput(overrides: Partial<ProductUpsert> & Pick<ProductUpsert, 'sku' | 'supplierId'>): ProductUpsert {
   return {
     name: '整合測試商品',

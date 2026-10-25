@@ -67,6 +67,7 @@ function navFor(role: string | null): { group: string; items: NavItem[] }[] {
         { href: '/admin/sto', label: 'STO 三階段' },
         { href: '/admin/token', label: 'STO+ 代幣' },
         { href: '/admin/regulatory', label: '法規脈絡' },
+        { href: '/admin/infrastructure', label: '基礎設施' },
       ] },
     ];
   }
