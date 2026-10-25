@@ -855,11 +855,13 @@ function productInput(overrides: Partial<ProductUpsert> & Pick<ProductUpsert, 's
     claims: [],
     status: null,
     reviewedBy: 'integration-test',
+    guardSupplierId: null,
     ...overrides,
   };
 }
 
-const exec = (sql: string, params: readonly unknown[]): Promise<unknown> => db().query(sql, params as unknown[]);
+const exec = (sql: string, params: readonly unknown[]): Promise<readonly unknown[]> =>
+  db().query(sql, params as unknown[]).then((result) => result.rows);
 
 async function productStatus(sku: string): Promise<string> {
   const row = await db().query<{ status: string }>('SELECT status FROM products WHERE sku = $1', [sku]);
@@ -887,5 +889,62 @@ describe.skipIf(!available)('商品上架狀態', () => {
     const sku = `IT-STATUS-${fixture.suffix}`;
     await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, status: 'suspended' }));
     expect(await productStatus(sku)).toBe('suspended');
+  });
+});
+
+describe.skipIf(!available)('商品寫入的供應商歸屬守門', () => {
+  async function otherSupplierId(suffix: string): Promise<string> {
+    const row = await db().query<{ id: string }>(
+      `INSERT INTO suppliers(name, haccp_status, status) VALUES ($1, 'verified', 'active') RETURNING id`,
+      [`整合測試他家供應商 ${suffix}`],
+    );
+    return row.rows[0]!.id;
+  }
+
+  it('供應商不能以他人 SKU 覆寫別家商品', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-OWN-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, name: '原商品' }));
+
+    const intruder = await otherSupplierId(fixture.suffix);
+    const applied = await upsertProduct(
+      exec,
+      productInput({ sku, supplierId: intruder, name: '被竄改', price: 1, guardSupplierId: intruder }),
+    );
+
+    expect(applied).toBe(false);
+    const row = await db().query<{ name: string; price_twd: number; supplier_id: string }>(
+      'SELECT name, price_twd, supplier_id FROM products WHERE sku = $1',
+      [sku],
+    );
+    expect(row.rows[0]!.name).toBe('原商品');
+    expect(row.rows[0]!.price_twd).toBe(120);
+    expect(row.rows[0]!.supplier_id).toBe(fixture.supplierId);
+  });
+
+  it('供應商可以更新自己的商品', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-OWN-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, name: '原商品' }));
+    const applied = await upsertProduct(
+      exec,
+      productInput({ sku, supplierId: fixture.supplierId, name: '新名稱', guardSupplierId: fixture.supplierId }),
+    );
+    expect(applied).toBe(true);
+    const row = await db().query<{ name: string }>('SELECT name FROM products WHERE sku = $1', [sku]);
+    expect(row.rows[0]!.name).toBe('新名稱');
+  });
+
+  it('admin 不受歸屬限制，可代為更新任一供應商商品', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-OWN-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, name: '原商品' }));
+    const applied = await upsertProduct(
+      exec,
+      productInput({ sku, supplierId: fixture.supplierId, name: '總部修正', guardSupplierId: null }),
+    );
+    expect(applied).toBe(true);
+    const row = await db().query<{ name: string }>('SELECT name FROM products WHERE sku = $1', [sku]);
+    expect(row.rows[0]!.name).toBe('總部修正');
   });
 });

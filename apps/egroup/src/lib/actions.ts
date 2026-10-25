@@ -364,7 +364,7 @@ export async function saveProductAction(formData: FormData): Promise<never> {
     const supplierId = session.role === 'supplier' ? session.supplierId : text(formData, 'supplierId');
     if (supplierId === null || supplierId === '') throw new Error('SUPPLIER_REQUIRED');
 
-    await upsertProduct(query, {
+    const applied = await upsertProduct(query, {
       sku,
       name,
       category,
@@ -387,7 +387,10 @@ export async function saveProductAction(formData: FormData): Promise<never> {
       claims,
       status,
       reviewedBy: session.displayName,
+      guardSupplierId: session.role === 'supplier' ? session.supplierId : null,
     });
+    // SKU 已存在但屬於其他供應商：不覆寫、也不透露該 SKU 的存在。
+    if (!applied) throw new Error('PRODUCT_NOT_FOUND');
     revalidatePath(path);
     revalidatePath('/products');
     return `商品 ${sku} 已儲存。`;
