@@ -90,11 +90,16 @@ export async function listProducts(filters: {
   storage?: string;
   excludeAllergens?: readonly string[];
   includeInactive?: boolean;
+  supplierId?: string;
 } = {}): Promise<ProductRow[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
   if (filters.includeInactive !== true) conditions.push("p.status = 'active'");
+  if (filters.supplierId !== undefined && filters.supplierId !== '') {
+    params.push(filters.supplierId);
+    conditions.push(`p.supplier_id = $${params.length}::uuid`);
+  }
   if (filters.search !== undefined && filters.search.trim() !== '') {
     params.push(`%${filters.search.trim()}%`);
     conditions.push(`(p.name ILIKE $${params.length} OR p.sku ILIKE $${params.length} OR p.description ILIKE $${params.length})`);

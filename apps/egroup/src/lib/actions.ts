@@ -7,6 +7,7 @@ import { checkLabel, draftCustomerReply, generatePickupCode, hashPickupCode, mat
 import { authenticate, clearSessionCookie, hashPassword, requireRole, setSessionCookie } from './auth.ts';
 import { cartLines, readCart, writeCart } from './cart.ts';
 import { dbErrorMessage, one, query, tx } from './db.ts';
+import { upsertProduct } from './products.ts';
 import { pickupSecret } from './secrets.ts';
 
 function text(formData: FormData, key: string): string {
@@ -322,13 +323,21 @@ export async function saveProductAction(formData: FormData): Promise<never> {
   const shelfLife = int(formData, 'shelfLife');
   const heating = text(formData, 'heating');
   const claims = list(formData, 'claims');
-  const status = text(formData, 'status') || 'draft';
+  const requestedStatus = text(formData, 'status');
   const path = backPath(formData, '/supplier/products');
 
   return run(path, async () => {
     if (sku === '' || name === '' || category === '') throw new Error('PRODUCT_FIELDS_REQUIRED');
     if (weight <= 0 || shelfLife <= 0) throw new Error('PRODUCT_WEIGHT_SHELF_LIFE_REQUIRED');
     if (!['frozen', 'chilled', 'ambient'].includes(storage)) throw new Error('PRODUCT_STORAGE_INVALID');
+    if (price <= 0) throw new Error('PRODUCT_PRICE_INVALID');
+    if (cost < 0) throw new Error('PRODUCT_COST_INVALID');
+    if (cost > price) throw new Error('PRODUCT_COST_EXCEEDS_PRICE');
+    if (requestedStatus !== '' && !['draft', 'active', 'suspended', 'recalled'].includes(requestedStatus)) {
+      throw new Error('PRODUCT_STATUS_INVALID');
+    }
+    // 供應商不得自行上架：狀態維持原值（新商品為 draft），只有 admin 能指定。
+    const status = session.role === 'admin' && requestedStatus !== '' ? requestedStatus : null;
 
     const label = checkLabel({
       sku,
@@ -355,22 +364,30 @@ export async function saveProductAction(formData: FormData): Promise<never> {
     const supplierId = session.role === 'supplier' ? session.supplierId : text(formData, 'supplierId');
     if (supplierId === null || supplierId === '') throw new Error('SUPPLIER_REQUIRED');
 
-    await query(
-      `INSERT INTO products(sku, name, category, description, supplier_id, price_twd, cost_twd, weight_g,
-         calories, protein_g, fat_g, saturated_fat_g, carbs_g, sugar_g, sodium_mg, allergens, storage,
-         shelf_life_days, heating_instructions, claims, status, nutrition_reviewed_by, nutrition_reviewed_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,now())
-       ON CONFLICT (sku) DO UPDATE SET name = EXCLUDED.name, category = EXCLUDED.category,
-         description = EXCLUDED.description, price_twd = EXCLUDED.price_twd, cost_twd = EXCLUDED.cost_twd,
-         weight_g = EXCLUDED.weight_g, calories = EXCLUDED.calories, protein_g = EXCLUDED.protein_g,
-         fat_g = EXCLUDED.fat_g, saturated_fat_g = EXCLUDED.saturated_fat_g, carbs_g = EXCLUDED.carbs_g,
-         sugar_g = EXCLUDED.sugar_g, sodium_mg = EXCLUDED.sodium_mg, allergens = EXCLUDED.allergens,
-         storage = EXCLUDED.storage, shelf_life_days = EXCLUDED.shelf_life_days,
-         heating_instructions = EXCLUDED.heating_instructions, claims = EXCLUDED.claims,
-         status = EXCLUDED.status, nutrition_reviewed_by = EXCLUDED.nutrition_reviewed_by,
-         nutrition_reviewed_at = now(), updated_at = now()`,
-      [sku, name, category, description, supplierId, price, cost, weight, calories, protein, fat, satFat, carbs, sugar, sodium, allergens, storage, shelfLife, heating, claims, status, session.displayName],
-    );
+    await upsertProduct(query, {
+      sku,
+      name,
+      category,
+      description,
+      supplierId,
+      price,
+      cost,
+      weight,
+      calories,
+      protein,
+      fat,
+      saturatedFat: satFat,
+      carbs,
+      sugar,
+      sodium,
+      allergens,
+      storage,
+      shelfLife,
+      heating,
+      claims,
+      status,
+      reviewedBy: session.displayName,
+    });
     revalidatePath(path);
     revalidatePath('/products');
     return `商品 ${sku} 已儲存。`;

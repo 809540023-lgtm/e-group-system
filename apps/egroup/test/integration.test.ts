@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { Client, Pool } from 'pg';
 import { afterAll, describe, expect, it } from 'vitest';
 import { hashPickupCode } from '@eg/meal';
+import { upsertProduct, type ProductUpsert } from '../src/lib/products.ts';
 
 /**
  * 資料庫整合測試：驗證計畫書第十五章要求的交易保證。
@@ -829,5 +830,62 @@ describe.skipIf(!available)('監理環境交易保證', () => {
       [fixture.liveProgramId],
     );
     expect(audit.rows[0]!.count).toBe('1');
+  });
+});
+
+function productInput(overrides: Partial<ProductUpsert> & Pick<ProductUpsert, 'sku' | 'supplierId'>): ProductUpsert {
+  return {
+    name: '整合測試商品',
+    category: '舒肥主餐',
+    description: '',
+    price: 120,
+    cost: 60,
+    weight: 250,
+    calories: 300,
+    protein: 25,
+    fat: 8,
+    saturatedFat: null,
+    carbs: 30,
+    sugar: null,
+    sodium: 400,
+    allergens: [],
+    storage: 'chilled',
+    shelfLife: 5,
+    heating: '微波 700W 90 秒',
+    claims: [],
+    status: null,
+    reviewedBy: 'integration-test',
+    ...overrides,
+  };
+}
+
+const exec = (sql: string, params: readonly unknown[]): Promise<unknown> => db().query(sql, params as unknown[]);
+
+async function productStatus(sku: string): Promise<string> {
+  const row = await db().query<{ status: string }>('SELECT status FROM products WHERE sku = $1', [sku]);
+  return row.rows[0]!.status;
+}
+
+describe.skipIf(!available)('商品上架狀態', () => {
+  it('供應商建立新商品時一律為草稿', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-STATUS-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, status: null }));
+    expect(await productStatus(sku)).toBe('draft');
+  });
+
+  it('供應商更新既有上架商品時維持原狀態，不會被降級', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-STATUS-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, status: 'active' }));
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, status: null, price: 150 }));
+    expect(await productStatus(sku)).toBe('active');
+  });
+
+  it('只有 admin 能指定狀態', async () => {
+    const fixture = await createFixture(1);
+    const sku = `IT-STATUS-${fixture.suffix}`;
+    await upsertProduct(exec, productInput({ sku, supplierId: fixture.supplierId, status: 'suspended' }));
+    expect(await productStatus(sku)).toBe('suspended');
   });
 });

@@ -28,16 +28,23 @@ export async function one<T extends QueryResultRow = QueryResultRow>(
 
 export async function tx<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await getPool().connect();
+  let broken: Error | undefined;
   try {
     await client.query('BEGIN');
     const result = await fn(client);
     await client.query('COMMIT');
     return result;
   } catch (error) {
-    await client.query('ROLLBACK');
+    try {
+      await client.query('ROLLBACK');
+    } catch (rollbackError) {
+      // ROLLBACK 失敗代表連線已不可用：銷毀連線，但對外仍拋出原始錯誤，
+      // 否則真正的失敗原因會被 rollback 的錯誤蓋掉。
+      broken = rollbackError instanceof Error ? rollbackError : new Error('ROLLBACK_FAILED');
+    }
     throw error;
   } finally {
-    client.release();
+    client.release(broken);
   }
 }
 
@@ -85,6 +92,9 @@ export function dbErrorMessage(error: unknown): string {
         REFUND_REASON_REQUIRED: '請填寫退款原因。',
         NAME_REQUIRED: '請填寫姓名。',
         PRODUCT_FIELDS_REQUIRED: '請填寫 SKU、品名與分類。',
+        PRODUCT_PRICE_INVALID: '售價必須大於 0。',
+        PRODUCT_COST_INVALID: '成本不得為負數。',
+        PRODUCT_COST_EXCEEDS_PRICE: '成本不得高於售價。',
         PRODUCT_WEIGHT_SHELF_LIFE_REQUIRED: '重量與保存天數必須大於 0。',
         PRODUCT_STORAGE_INVALID: '保存方式不正確。',
         LABEL_BLOCKED: '營養標示或宣稱未通過檢核。',

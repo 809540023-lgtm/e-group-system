@@ -15,9 +15,7 @@ export default async function SupplierProductsPage({
   if (session.supplierId === null) redirect('/admin');
   const params = await searchParams;
 
-  const products = (await listProducts({ includeInactive: true })).filter(
-    (product) => product.supplier_id === session.supplierId,
-  );
+  const products = await listProducts({ includeInactive: true, supplierId: session.supplierId });
   const error = typeof params.error === 'string' ? params.error : undefined;
   const ok = typeof params.ok === 'string' ? params.ok : undefined;
 
@@ -89,13 +87,7 @@ export default async function SupplierProductsPage({
             <Field label="營養宣稱" hint="例如：高蛋白, 低脂；不實宣稱會被阻擋"><input name="claims" /></Field>
           </div>
           <Field label="加熱方式"><textarea name="heating" rows={2} placeholder="微波 700W 90 秒，中心溫度需達 75°C" /></Field>
-          <Field label="狀態">
-            <select name="status" defaultValue="draft">
-              <option value="draft">草稿</option>
-              <option value="active">上架</option>
-              <option value="suspended">停售</option>
-            </select>
-          </Field>
+          <p className="muted small">上架狀態由總部審核後設定；供應商儲存時一律維持草稿或原狀態。</p>
           <button type="submit" className="btn btn-primary">儲存商品</button>
         </form>
       </Card>
