@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AppError, firstResponseDue, routeTicket, type TicketCategory } from '@jp/domain';
+import { withTransaction } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,11 +87,7 @@ interface CreateInput {
 }
 
 async function createTicket(url: string, input: CreateInput): Promise<string> {
-  const { Client } = await import('pg');
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  try {
-    await client.query('BEGIN');
+  return withTransaction(url, async (client) => {
     const assignedRole = input.routing.action === 'route_to_role' ? input.routing.role : 'support';
     const result = await client.query<{ ticket_code: string }>(
       `INSERT INTO support_tickets (ticket_code, order_id, category, status, assigned_role, first_response_due_at)
@@ -110,14 +107,8 @@ async function createTicket(url: string, input: CreateInput): Promise<string> {
        SELECT ticket_id, 'customer', $2, '[]'::jsonb FROM support_tickets WHERE ticket_code = $1`,
       [ticketCode, input.message],
     );
-    await client.query('COMMIT');
     return ticketCode;
-  } catch (cause) {
-    await client.query('ROLLBACK');
-    throw cause;
-  } finally {
-    await client.end();
-  }
+  });
 }
 
 function generateTicketCode(): string {

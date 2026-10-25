@@ -5,8 +5,8 @@
  * 公開 API 使用 jp_web 角色，不得使用管理帳號。
  */
 
-import { Client } from 'pg';
 import { arrivalWindowFor, type CatalogQuery, type CatalogRepository, type PublicProduct } from './catalog.ts';
+import { withClient } from './db.ts';
 import type { SupplyMode } from '@jp/domain';
 
 interface Row {
@@ -73,20 +73,10 @@ function toPublic(row: Row): PublicProduct {
 }
 
 export function createDatabaseRepository(databaseUrl: string): CatalogRepository {
-  async function withClient<T>(fn: (client: Client) => Promise<T>): Promise<T> {
-    const client = new Client({ connectionString: databaseUrl });
-    await client.connect();
-    try {
-      return await fn(client);
-    } finally {
-      await client.end();
-    }
-  }
-
   return {
     kind: 'database',
     async list(query: CatalogQuery) {
-      return withClient(async (client) => {
+      return withClient(databaseUrl, async (client) => {
         const conditions = ['p.published_version_id IS NOT NULL', 's.sale_twd IS NOT NULL', 'COALESCE(c.approved, false) = true'];
         const params: unknown[] = [];
         if (query.category !== undefined) {
@@ -111,7 +101,7 @@ export function createDatabaseRepository(databaseUrl: string): CatalogRepository
       });
     },
     async bySku(sku) {
-      return withClient(async (client) => {
+      return withClient(databaseUrl, async (client) => {
         const result = await client.query<Row>(
           `SELECT ${SELECT_COLUMNS} ${FROM_JOIN} WHERE s.sku = $1 AND p.published_version_id IS NOT NULL`,
           [sku],
@@ -121,7 +111,7 @@ export function createDatabaseRepository(databaseUrl: string): CatalogRepository
       });
     },
     async categories() {
-      return withClient(async (client) => {
+      return withClient(databaseUrl, async (client) => {
         const result = await client.query<{ category: string }>(
           `SELECT DISTINCT p.category ${FROM_JOIN} WHERE p.published_version_id IS NOT NULL ORDER BY p.category`,
         );

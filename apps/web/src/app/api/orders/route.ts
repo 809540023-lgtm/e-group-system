@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AppError } from '@jp/domain';
+import { withClient } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,10 +69,7 @@ interface OrderSummary {
 }
 
 async function lookupOrder(url: string, orderCode: string, phone: string): Promise<OrderSummary | null> {
-  const { Client } = await import('pg');
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  try {
+  return withClient(url, async (client) => {
     const result = await client.query<{
       order_code: string;
       status: string;
@@ -112,7 +110,5 @@ async function lookupOrder(url: string, orderCode: string, phone: string): Promi
       createdAt: row.created_at.toISOString(),
       lines: lines.rows.map((l) => ({ sku: l.sku, quantity: l.quantity, supplyMode: l.supply_mode })),
     };
-  } finally {
-    await client.end();
-  }
+  });
 }

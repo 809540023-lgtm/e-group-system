@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { permissionsFor, type Permission, type StaffPrincipal, type StaffRole } from '@jp/domain';
 import { AuthError, SESSION_COOKIE, devAuthPrincipal, requirePermission, requireStaff, type AuthContext } from './auth';
+import { withClient } from './db';
 import { readWebEnv, type WebEnv } from './env';
 
 /**
@@ -37,10 +38,7 @@ export function describeAuthError(cause: unknown): { readonly code: string; read
 async function lookupPrincipal(staffId: string): Promise<StaffPrincipal | null> {
   const url = process.env.DATABASE_URL;
   if (url === undefined || url.trim() === '') return null;
-  const { Client } = await import('pg');
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  try {
+  return withClient(url, async (client) => {
     const result = await client.query<{ staff_id: string; active: boolean; session_epoch: number; roles: string[] | null }>(
       `SELECT s.staff_id, s.active, s.session_epoch,
               COALESCE(array_agg(sp.role) FILTER (WHERE sp.role IS NOT NULL), '{}') AS roles
@@ -58,7 +56,5 @@ async function lookupPrincipal(staffId: string): Promise<StaffPrincipal | null> 
       active: row.active,
       sessionEpoch: row.session_epoch,
     };
-  } finally {
-    await client.end();
-  }
+  });
 }

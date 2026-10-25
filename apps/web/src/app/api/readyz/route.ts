@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withClient } from '@/lib/db';
 import { readWebEnv, validateProductionEnv } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -25,15 +26,10 @@ export async function GET(): Promise<NextResponse> {
     checks.push({ name: 'database', ok: false, detail: '未設定 DATABASE_URL，無法確認交易資料庫。' });
   } else {
     try {
-      const { Client } = await import('pg');
-      const client = new Client({ connectionString: env.databaseUrl });
-      await client.connect();
-      try {
+      await withClient(env.databaseUrl, async (client) => {
         await client.query('SELECT 1');
-        checks.push({ name: 'database', ok: true, detail: '資料庫連線正常' });
-      } finally {
-        await client.end();
-      }
+      });
+      checks.push({ name: 'database', ok: true, detail: '資料庫連線正常' });
     } catch (cause) {
       checks.push({ name: 'database', ok: false, detail: `資料庫連線失敗：${cause instanceof Error ? cause.message : String(cause)}` });
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AppError, verifyEcpayNotification, type VerifiedNotification } from '@jp/domain';
+import { withClient } from '@/lib/db';
 import { readWebEnv } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -81,10 +82,7 @@ interface Expectations {
 async function lookupExpectations(merchantTradeNo: string): Promise<Expectations | null> {
   const url = process.env.DATABASE_URL;
   if (url === undefined || url.trim() === '') return null;
-  const { Client } = await import('pg');
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  try {
+  return withClient(url, async (client) => {
     const result = await client.query<{ order_id: string; attempt_id: string; merchant_trade_no: string; amount_twd: number }>(
       'SELECT order_id, attempt_id, merchant_trade_no, amount_twd FROM payment_attempts WHERE merchant_trade_no = $1',
       [merchantTradeNo],
@@ -93,9 +91,7 @@ async function lookupExpectations(merchantTradeNo: string): Promise<Expectations
     return row === undefined
       ? null
       : { orderId: row.order_id, attemptId: row.attempt_id, merchantTradeNo: row.merchant_trade_no, amountTwd: row.amount_twd };
-  } finally {
-    await client.end();
-  }
+  });
 }
 
 interface ApplyInput {
@@ -110,10 +106,7 @@ interface ApplyInput {
 async function applyPaymentEvent(input: ApplyInput): Promise<{ readonly ok: boolean; readonly reason: string }> {
   const url = process.env.DATABASE_URL;
   if (url === undefined || url.trim() === '') return { ok: false, reason: '未設定 DATABASE_URL，無法套用付款事件。' };
-  const { Client } = await import('pg');
-  const client = new Client({ connectionString: url });
-  await client.connect();
-  try {
+  return withClient(url, async (client) => {
     const result = await client.query<{ applied: boolean; duplicate: boolean; needs_review: boolean }>(
       'SELECT * FROM jp_apply_payment_event($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
       [
@@ -133,7 +126,5 @@ async function applyPaymentEvent(input: ApplyInput): Promise<{ readonly ok: bool
     const row = result.rows[0];
     if (row?.needs_review === true) return { ok: false, reason: '付款事件需人工核對。' };
     return { ok: true, reason: row?.duplicate === true ? '重送事件已去重。' : '付款事件已套用。' };
-  } finally {
-    await client.end();
-  }
+  });
 }
